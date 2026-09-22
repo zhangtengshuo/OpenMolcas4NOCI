@@ -103,6 +103,7 @@ INT mh5c_create_dset_scalar_real(INT file_id, char *name);
 INT mh5c_create_dset_scalar_str(INT file_id, char *name, INT size);
 INT mh5c_create_dset_array_int(INT file_id, char *name, INT rank, INT *dims);
 INT mh5c_create_dset_array_real(INT file_id, char *name, INT rank, INT *dims);
+INT mh5c_create_dset_array_real_large_uncompressed(INT file_id, char *name, INT rank, INT *dims, INT *chunk_dims);
 INT mh5c_create_dset_array_str(INT file_id, char *name, INT rank, INT *dims, INT size);
 INT mh5c_create_dset_array_dyn_int(INT file_id, char *name, INT rank, INT *dims);
 INT mh5c_create_dset_array_dyn_real(INT file_id, char *name, INT rank, INT *dims);
@@ -115,9 +116,11 @@ INT mh5c_put_dset_scalar_real(INT dest_id, void *value);
 INT mh5c_put_dset_scalar_str(INT dest_id, void *value);
 INT mh5c_put_dset_array_int(INT dset_id, INT *extents, INT *offsets, void *buffer);
 INT mh5c_put_dset_array_real(INT dset_id, INT *extents, INT *offsets, void *buffer);
+INT mh5c_put_dset_array_real_noflush(INT dset_id, INT *extents, INT *offsets, void *buffer);
 INT mh5c_put_dset_array_str(INT dset_id, INT *extents, INT *offsets, void *buffer);
 INT mh5c_put_dset_array_int_full(INT dset_id, void *buffer);
 INT mh5c_put_dset_array_real_full(INT dset_id, void *buffer);
+INT mh5c_flush_file(INT file_id);
 
 INT mh5c_get_dset_scalar_int(INT dest_id, void *value);
 INT mh5c_get_dset_scalar_real(INT dest_id, void *value);
@@ -147,8 +150,11 @@ herr_t mh5c_get_attr(hid_t dset_id, void *value, hid_t value_type);
 /* datasets */
 hid_t mh5c_create_dset_scalar(hid_t file_id, char *name, hid_t hdf5_type);
 hid_t mh5c_create_dset_array(hid_t file_id, char *name, int rank, const INT *dims, const hsize_t mdim, hid_t hdf5_type);
+hid_t mh5c_create_dset_array_large_uncompressed(hid_t file_id, char *name, int rank, const INT *dims, const INT *chunk_dims,
+                                                hid_t hdf5_type);
 herr_t mh5c_put_dset_scalar(hid_t dset_id, void *value, hid_t value_type);
 herr_t mh5c_put_dset_array(hid_t dset_id, const INT *extents, const INT *offsets, void *buffer, hid_t buffer_type);
+herr_t mh5c_put_dset_array_noflush(hid_t dset_id, const INT *extents, const INT *offsets, void *buffer, hid_t buffer_type);
 herr_t mh5c_get_dset_scalar(hid_t dset_id, void *value, hid_t value_type);
 herr_t mh5c_get_dset_array(hid_t dset_id, const INT *extents, const INT *offsets, void *buffer, hid_t buffer_type);
 
@@ -390,6 +396,9 @@ INT mh5c_create_dset_array_int(INT file_id, char *name, INT rank, INT *dims) {
 INT mh5c_create_dset_array_real(INT file_id, char *name, INT rank, INT *dims) {
   return mh5c_create_dset_array(file_id, name, rank, dims, 0, H5T_STORAGE_REAL);
 }
+INT mh5c_create_dset_array_real_large_uncompressed(INT file_id, char *name, INT rank, INT *dims, INT *chunk_dims) {
+  return mh5c_create_dset_array_large_uncompressed(file_id, name, rank, dims, chunk_dims, H5T_STORAGE_REAL);
+}
 INT mh5c_create_dset_array_str(INT file_id, char *name, INT rank, INT *dims, INT size) {
   hid_t dset_id;
   hid_t h5t_string;
@@ -449,6 +458,9 @@ INT mh5c_put_dset_array_int(INT dset_id, INT *extents, INT *offsets, void *buffe
 INT mh5c_put_dset_array_real(INT dset_id, INT *extents, INT *offsets, void *buffer) {
   return mh5c_put_dset_array(dset_id, extents, offsets, buffer, H5T_MOLCAS_REAL);
 }
+INT mh5c_put_dset_array_real_noflush(INT dset_id, INT *extents, INT *offsets, void *buffer) {
+  return mh5c_put_dset_array_noflush(dset_id, extents, offsets, buffer, H5T_MOLCAS_REAL);
+}
 
 INT mh5c_put_dset_array_str(INT dset_id, INT *extents, INT *offsets, void *buffer) {
   hid_t h5t_string;
@@ -465,6 +477,10 @@ INT mh5c_put_dset_array_int_full(INT dset_id, void *buffer) {
 
 INT mh5c_put_dset_array_real_full(INT dset_id, void *buffer) {
   return mh5c_put_dset_array(dset_id, NULL, NULL, buffer, H5T_MOLCAS_REAL);
+}
+
+INT mh5c_flush_file(INT file_id) {
+  return H5Fflush((hid_t)file_id, H5F_SCOPE_LOCAL);
 }
 
 INT mh5c_put_dset_array_str_full(INT dset_id, void *buffer) {
@@ -668,6 +684,36 @@ hid_t mh5c_create_dset_array(hid_t file_id, char *name, int rank, const INT *dim
   return dset_id;
 }
 
+hid_t mh5c_create_dset_array_large_uncompressed(hid_t file_id, char *name, int rank, const INT *dims, const INT *chunk_dims,
+                                                hid_t hdf5_type) {
+  herr_t status;
+  hid_t space_id, plist_id, dset_id;
+  hsize_t hdims[MAX_RANK], hchunks[MAX_RANK];
+  if ((rank <= 0) || (rank > MAX_RANK)) return -1;
+  for (int i = 0; i < rank; i++) {
+    if ((dims[i] <= 0) || (chunk_dims[i] <= 0) || (chunk_dims[i] > dims[i])) return -1;
+  }
+  copy_cast_f2c(rank, dims, hdims);
+  copy_cast_f2c(rank, chunk_dims, hchunks);
+  space_id = H5Screate_simple(rank, hdims, NULL);
+  if (space_id < 0) return -1;
+  plist_id = H5Pcreate(H5P_DATASET_CREATE);
+  if (plist_id < 0) {
+    H5Sclose(space_id);
+    return -1;
+  }
+  status = H5Pset_chunk(plist_id, rank, hchunks);
+  if (status < 0) {
+    H5Pclose(plist_id);
+    H5Sclose(space_id);
+    return -1;
+  }
+  dset_id = H5Dcreate(file_id, name, hdf5_type, space_id, H5P_DEFAULT, plist_id, H5P_DEFAULT);
+  H5Pclose(plist_id);
+  H5Sclose(space_id);
+  return dset_id;
+}
+
 herr_t mh5c_put_dset_scalar(hid_t dset_id, void *value, hid_t value_type) {
   herr_t status;
   status = H5Dwrite(dset_id, value_type, H5S_ALL, H5S_ALL, H5P_DEFAULT, value);
@@ -676,6 +722,12 @@ herr_t mh5c_put_dset_scalar(hid_t dset_id, void *value, hid_t value_type) {
 }
 
 herr_t mh5c_put_dset_array(hid_t dset_id, const INT *extents, const INT *offsets, void *buffer, hid_t buffer_type) {
+  herr_t status = mh5c_put_dset_array_noflush(dset_id, extents, offsets, buffer, buffer_type);
+  if (status >= 0) status = H5Fflush(dset_id, H5F_SCOPE_LOCAL);
+  return status;
+}
+
+herr_t mh5c_put_dset_array_noflush(hid_t dset_id, const INT *extents, const INT *offsets, void *buffer, hid_t buffer_type) {
   herr_t status;
   hid_t mem_space_id, dset_space_id;
   hsize_t hextents[MAX_RANK], hoffsets[MAX_RANK];
@@ -705,7 +757,6 @@ herr_t mh5c_put_dset_array(hid_t dset_id, const INT *extents, const INT *offsets
     status = H5Sclose(dset_space_id);
     status = H5Sclose(mem_space_id);
   }
-  status = H5Fflush(dset_id, H5F_SCOPE_LOCAL);
   return status;
 }
 

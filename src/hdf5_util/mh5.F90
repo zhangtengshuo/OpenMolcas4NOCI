@@ -24,7 +24,8 @@ public :: mh5_create_file, mh5_open_file_rw, mh5_open_file_r, mh5_close_file, mh
           mh5_exists_attr, mh5_open_attr, mh5_close_attr, mh5_exists_dset, mh5_open_dset, mh5_close_dset, mh5_create_attr_int, &
           mh5_create_attr_real, mh5_create_attr_str, mh5_put_attr, mh5_get_attr, mh5_init_attr, mh5_fetch_attr, &
           mh5_create_dset_int, mh5_create_dset_real, mh5_create_dset_str, mh5_put_dset, mh5_get_dset, mh5_init_dset, &
-          mh5_fetch_dset, mh5_resize_dset, mh5_get_dset_dims
+          mh5_fetch_dset, mh5_resize_dset, mh5_get_dset_dims, mh5_create_dset_real_large_uncompressed, &
+          mh5_put_dset_real_hyperslab_noflush, mh5_flush_file
 
 !======================
 ! Overloaded interfaces
@@ -525,6 +526,16 @@ interface
     integer(kind=MOLCAS_C_INT) :: dims(*)
   end function mh5_c_create_dset_array_real
 
+  function mh5_c_create_dset_array_real_large_uncompressed(lu,dsetname,rank,dims,chunk_dims) result(dsetid) &
+           bind(C,name='mh5c_create_dset_array_real_large_uncompressed')
+    import :: MOLCAS_C_INT, c_char
+    integer(kind=MOLCAS_C_INT) :: dsetid
+    integer(kind=MOLCAS_C_INT), value :: lu
+    character(kind=c_char) :: dsetname(*)
+    integer(kind=MOLCAS_C_INT), value :: rank
+    integer(kind=MOLCAS_C_INT) :: dims(*), chunk_dims(*)
+  end function mh5_c_create_dset_array_real_large_uncompressed
+
   function mh5_c_create_dset_array_dyn_real(lu,dsetname,rank,dims) result(dsetid) &
            bind(C,name='mh5c_create_dset_array_dyn_real')
     import :: MOLCAS_C_INT, c_char
@@ -582,6 +593,21 @@ interface
     integer(kind=MOLCAS_C_INT) :: exts(*), offs(*)
     real(kind=MOLCAS_C_REAL) :: buffer(*)
   end function mh5_c_put_dset_array_real
+
+  function mh5_c_put_dset_array_real_noflush(dsetid,exts,offs,buffer) result(rc) &
+           bind(C,name='mh5c_put_dset_array_real_noflush')
+    import :: MOLCAS_C_INT, MOLCAS_C_REAL
+    integer(kind=MOLCAS_C_INT) :: rc
+    integer(kind=MOLCAS_C_INT), value :: dsetid
+    integer(kind=MOLCAS_C_INT) :: exts(*), offs(*)
+    real(kind=MOLCAS_C_REAL) :: buffer(*)
+  end function mh5_c_put_dset_array_real_noflush
+
+  function mh5_c_flush_file(fileid) result(rc) bind(C,name='mh5c_flush_file')
+    import :: MOLCAS_C_INT
+    integer(kind=MOLCAS_C_INT) :: rc
+    integer(kind=MOLCAS_C_INT), value :: fileid
+  end function mh5_c_flush_file
 
   function mh5_c_put_dset_array_real_full(dsetid,buffer) result(rc) &
            bind(C,name='mh5c_put_dset_array_real_full')
@@ -1190,6 +1216,16 @@ function mh5_create_dset_array_real(lu,dsetname,rank,dims,dyn) result(dsetid)
   end if
 end function mh5_create_dset_array_real
 
+function mh5_create_dset_real_large_uncompressed(lu,dsetname,rank,dims,chunk_dims) result(dsetid)
+  integer(kind=iwp) :: dsetid
+  integer(kind=iwp), intent(in) :: lu, rank, dims(*), chunk_dims(*)
+  character(len=*), intent(in) :: dsetname
+  character(len=MH5_MAX_LBL_LEN) :: mh5_lbl
+  call f2c_string(dsetname,mh5_lbl)
+  dsetid = mh5_c_create_dset_array_real_large_uncompressed(lu,mh5_lbl,rank,dims,chunk_dims)
+  if (dsetid < 0) call abend()
+end function mh5_create_dset_real_large_uncompressed
+
 function mh5_create_dset_array_str(lu,dsetname,rank,dims,length,dyn) result(dsetid)
   integer(kind=iwp) :: dsetid
   integer(kind=iwp), intent(in) :: lu, rank, dims(*), length
@@ -1236,6 +1272,17 @@ subroutine mh5_put_dset_array_real(dsetid,buffer,exts,offs)
   end if
   if (rc < 0) call abend()
 end subroutine mh5_put_dset_array_real
+
+subroutine mh5_put_dset_real_hyperslab_noflush(dsetid,buffer,exts,offs)
+  integer(kind=iwp), intent(in) :: dsetid, exts(*), offs(*)
+  real(kind=wp), intent(in) :: buffer(*)
+  if (mh5_c_put_dset_array_real_noflush(dsetid,exts,offs,buffer) < 0) call abend()
+end subroutine mh5_put_dset_real_hyperslab_noflush
+
+subroutine mh5_flush_file(fileid)
+  integer(kind=iwp), intent(in) :: fileid
+  if (mh5_c_flush_file(fileid) < 0) call abend()
+end subroutine mh5_flush_file
 
 subroutine mh5_put_dset_array_str(dsetid,buffer,exts,offs)
   integer(kind=iwp), intent(in) :: dsetid

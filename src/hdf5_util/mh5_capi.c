@@ -13,6 +13,7 @@
 
 #include <sys/stat.h>
 #include <string.h>
+#include <stdint.h>
 
 #include "molcasversion.h"
 #include "molcastype.h"
@@ -71,6 +72,7 @@ INT mh5c_close_file(INT file_id);
 
 /* groups */
 INT mh5c_open_group(INT file_id, char *name);
+INT mh5c_create_group(INT file_id, char *name);
 INT mh5c_close_group(INT group_id);
 
 /* attributes */
@@ -100,9 +102,11 @@ INT mh5c_get_attr_array_str(INT attr_id, void *buffer);
 /* datasets */
 INT mh5c_create_dset_scalar_int(INT file_id, char *name);
 INT mh5c_create_dset_scalar_real(INT file_id, char *name);
+INT mh5c_create_dset_scalar_i64(INT file_id, char *name);
 INT mh5c_create_dset_scalar_str(INT file_id, char *name, INT size);
 INT mh5c_create_dset_array_int(INT file_id, char *name, INT rank, INT *dims);
 INT mh5c_create_dset_array_real(INT file_id, char *name, INT rank, INT *dims);
+INT mh5c_create_dset_array_i64(INT file_id, char *name, INT rank, INT *dims);
 INT mh5c_create_dset_array_real_large_uncompressed(INT file_id, char *name, INT rank, INT *dims, INT *chunk_dims);
 INT mh5c_create_dset_array_str(INT file_id, char *name, INT rank, INT *dims, INT size);
 INT mh5c_create_dset_array_dyn_int(INT file_id, char *name, INT rank, INT *dims);
@@ -113,13 +117,16 @@ INT mh5c_close_dset(INT dset_id);
 
 INT mh5c_put_dset_scalar_int(INT dest_id, void *value);
 INT mh5c_put_dset_scalar_real(INT dest_id, void *value);
+INT mh5c_put_dset_scalar_i64(INT dest_id, void *value);
 INT mh5c_put_dset_scalar_str(INT dest_id, void *value);
 INT mh5c_put_dset_array_int(INT dset_id, INT *extents, INT *offsets, void *buffer);
 INT mh5c_put_dset_array_real(INT dset_id, INT *extents, INT *offsets, void *buffer);
+INT mh5c_put_dset_array_i64(INT dset_id, INT *extents, INT *offsets, void *buffer);
 INT mh5c_put_dset_array_real_noflush(INT dset_id, INT *extents, INT *offsets, void *buffer);
 INT mh5c_put_dset_array_str(INT dset_id, INT *extents, INT *offsets, void *buffer);
 INT mh5c_put_dset_array_int_full(INT dset_id, void *buffer);
 INT mh5c_put_dset_array_real_full(INT dset_id, void *buffer);
+INT mh5c_put_dset_array_i64_full(INT dset_id, void *buffer);
 INT mh5c_flush_file(INT file_id);
 
 INT mh5c_get_dset_scalar_int(INT dest_id, void *value);
@@ -241,6 +248,10 @@ INT mh5c_is_hdf5(char *filename) {
 
 INT mh5c_open_group(INT file_id, char *name) {
   return H5Gopen(file_id, name, H5P_DEFAULT);
+}
+
+INT mh5c_create_group(INT file_id, char *name) {
+  return H5Gcreate(file_id, name, H5P_DEFAULT, H5P_DEFAULT, H5P_DEFAULT);
 }
 
 INT mh5c_close_group(INT group_id) {
@@ -379,6 +390,10 @@ INT mh5c_create_dset_scalar_real(INT file_id, char *name) {
   return mh5c_create_dset_scalar((hid_t)file_id, name, H5T_STORAGE_REAL);
 }
 
+INT mh5c_create_dset_scalar_i64(INT file_id, char *name) {
+  return mh5c_create_dset_scalar((hid_t)file_id, name, H5T_STD_I64LE);
+}
+
 INT mh5c_create_dset_scalar_str(INT file_id, char *name, INT size) {
   hid_t dset_id;
   hid_t h5t_string;
@@ -395,6 +410,9 @@ INT mh5c_create_dset_array_int(INT file_id, char *name, INT rank, INT *dims) {
 }
 INT mh5c_create_dset_array_real(INT file_id, char *name, INT rank, INT *dims) {
   return mh5c_create_dset_array(file_id, name, rank, dims, 0, H5T_STORAGE_REAL);
+}
+INT mh5c_create_dset_array_i64(INT file_id, char *name, INT rank, INT *dims) {
+  return mh5c_create_dset_array(file_id, name, rank, dims, 0, H5T_STD_I64LE);
 }
 INT mh5c_create_dset_array_real_large_uncompressed(INT file_id, char *name, INT rank, INT *dims, INT *chunk_dims) {
   return mh5c_create_dset_array_large_uncompressed(file_id, name, rank, dims, chunk_dims, H5T_STORAGE_REAL);
@@ -442,6 +460,10 @@ INT mh5c_put_dset_scalar_real(INT dset_id, void *value) {
   return mh5c_put_dset_scalar((hid_t)dset_id, value, H5T_MOLCAS_REAL);
 }
 
+INT mh5c_put_dset_scalar_i64(INT dset_id, void *value) {
+  return mh5c_put_dset_scalar((hid_t)dset_id, value, H5T_NATIVE_INT64);
+}
+
 INT mh5c_put_dset_scalar_str(INT dset_id, void *value) {
   hid_t h5t_string;
   INT rc;
@@ -457,6 +479,9 @@ INT mh5c_put_dset_array_int(INT dset_id, INT *extents, INT *offsets, void *buffe
 
 INT mh5c_put_dset_array_real(INT dset_id, INT *extents, INT *offsets, void *buffer) {
   return mh5c_put_dset_array(dset_id, extents, offsets, buffer, H5T_MOLCAS_REAL);
+}
+INT mh5c_put_dset_array_i64(INT dset_id, INT *extents, INT *offsets, void *buffer) {
+  return mh5c_put_dset_array(dset_id, extents, offsets, buffer, H5T_NATIVE_INT64);
 }
 INT mh5c_put_dset_array_real_noflush(INT dset_id, INT *extents, INT *offsets, void *buffer) {
   return mh5c_put_dset_array_noflush(dset_id, extents, offsets, buffer, H5T_MOLCAS_REAL);
@@ -477,6 +502,10 @@ INT mh5c_put_dset_array_int_full(INT dset_id, void *buffer) {
 
 INT mh5c_put_dset_array_real_full(INT dset_id, void *buffer) {
   return mh5c_put_dset_array(dset_id, NULL, NULL, buffer, H5T_MOLCAS_REAL);
+}
+
+INT mh5c_put_dset_array_i64_full(INT dset_id, void *buffer) {
+  return mh5c_put_dset_array(dset_id, NULL, NULL, buffer, H5T_NATIVE_INT64);
 }
 
 INT mh5c_flush_file(INT file_id) {
@@ -728,7 +757,7 @@ herr_t mh5c_put_dset_array(hid_t dset_id, const INT *extents, const INT *offsets
 }
 
 herr_t mh5c_put_dset_array_noflush(hid_t dset_id, const INT *extents, const INT *offsets, void *buffer, hid_t buffer_type) {
-  herr_t status;
+  herr_t close_status, status;
   hid_t mem_space_id, dset_space_id;
   hsize_t hextents[MAX_RANK], hoffsets[MAX_RANK];
   int rank;
@@ -751,11 +780,13 @@ herr_t mh5c_put_dset_array_noflush(hid_t dset_id, const INT *extents, const INT 
     status = H5Sselect_hyperslab(dset_space_id, H5S_SELECT_SET, hoffsets, NULL, hextents, NULL);
 
     /* write the hyperslab */
-    status = H5Dwrite(dset_id, buffer_type, mem_space_id, dset_space_id, H5P_DEFAULT, buffer);
+    if (status >= 0) status = H5Dwrite(dset_id, buffer_type, mem_space_id, dset_space_id, H5P_DEFAULT, buffer);
 
     /* clean up dataspaces */
-    status = H5Sclose(dset_space_id);
-    status = H5Sclose(mem_space_id);
+    close_status = H5Sclose(dset_space_id);
+    if (status >= 0) status = close_status;
+    close_status = H5Sclose(mem_space_id);
+    if (status >= 0) status = close_status;
   }
   return status;
 }

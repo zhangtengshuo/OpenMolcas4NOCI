@@ -18,6 +18,7 @@ set (sources
      nemo_opt1.F90
      output1_seward.F90
      seward.F90
+     seward_export_portable_hdf5.F90
      seward_banner.F90
      tr_prm_cnt.F90
 )

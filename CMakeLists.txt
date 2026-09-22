@@ -2461,6 +2461,7 @@ if (HDF5 AND HDF5_FOUND)
     rassi
     rhodyn
     scf
+    seward
     single_aniso
     slapaf
     surfacehop

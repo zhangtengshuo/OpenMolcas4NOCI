@@ -14,18 +14,19 @@ module mh5
 
 #include "intent.fh"
 
-use, intrinsic :: iso_c_binding, only: c_char, c_null_char
+use, intrinsic :: iso_c_binding, only: c_char, c_null_char, c_int64_t
 use Definitions, only: wp, iwp, u6, MOLCAS_C_INT, MOLCAS_C_REAL
 
 implicit none
 private
 
-public :: mh5_create_file, mh5_open_file_rw, mh5_open_file_r, mh5_close_file, mh5_is_hdf5, mh5_open_group, mh5_close_group, &
+public :: mh5_create_file, mh5_open_file_rw, mh5_open_file_r, mh5_close_file, mh5_is_hdf5, mh5_create_group, mh5_open_group, &
+          mh5_close_group, &
           mh5_exists_attr, mh5_open_attr, mh5_close_attr, mh5_exists_dset, mh5_open_dset, mh5_close_dset, mh5_create_attr_int, &
           mh5_create_attr_real, mh5_create_attr_str, mh5_put_attr, mh5_get_attr, mh5_init_attr, mh5_fetch_attr, &
           mh5_create_dset_int, mh5_create_dset_real, mh5_create_dset_str, mh5_put_dset, mh5_get_dset, mh5_init_dset, &
           mh5_fetch_dset, mh5_resize_dset, mh5_get_dset_dims, mh5_create_dset_real_large_uncompressed, &
-          mh5_put_dset_real_hyperslab_noflush, mh5_flush_file
+          mh5_put_dset_real_hyperslab_noflush, mh5_flush_file, mh5_create_dset_i64, mh5_put_dset_i64
 
 !======================
 ! Overloaded interfaces
@@ -98,6 +99,11 @@ interface mh5_create_dset_real
                       mh5_create_dset_array_real
 end interface mh5_create_dset_real
 
+interface mh5_create_dset_i64
+  module procedure :: mh5_create_dset_scalar_i64, &
+                      mh5_create_dset_array_i64
+end interface mh5_create_dset_i64
+
 interface mh5_create_dset_str
   module procedure :: mh5_create_dset_scalar_str, &
                       mh5_create_dset_array_str
@@ -114,6 +120,12 @@ interface mh5_put_dset
                       mh5_put_dset_array_real_3d, &
                       mh5_put_dset_array_str
 end interface mh5_put_dset
+
+interface mh5_put_dset_i64
+  module procedure :: mh5_put_dset_scalar_i64, &
+                      mh5_put_dset_array_i64, &
+                      mh5_put_dset_array_i64_2d
+end interface mh5_put_dset_i64
 
 interface mh5_get_dset
   module procedure :: mh5_get_dset_scalar_int, &
@@ -207,6 +219,14 @@ interface
     integer(kind=MOLCAS_C_INT), value :: lu
     character(kind=c_char) :: groupname(*)
   end function mh5_c_open_group
+
+  function mh5_c_create_group(lu,groupname) result(groupid) &
+           bind(C,name='mh5c_create_group')
+    import :: MOLCAS_C_INT, c_char
+    integer(kind=MOLCAS_C_INT) :: groupid
+    integer(kind=MOLCAS_C_INT), value :: lu
+    character(kind=c_char) :: groupname(*)
+  end function mh5_c_create_group
 
   function mh5_c_close_group(id) result(rc) &
            bind(C,name='mh5c_close_group')
@@ -439,6 +459,14 @@ interface
     integer(kind=MOLCAS_C_INT) :: dsetid
   end function mh5_c_create_dset_scalar_real
 
+  function mh5_c_create_dset_scalar_i64(lu,dsetname) result(dsetid) &
+           bind(C,name='mh5c_create_dset_scalar_i64')
+    import :: MOLCAS_C_INT, c_char
+    integer(kind=MOLCAS_C_INT) :: dsetid
+    integer(kind=MOLCAS_C_INT), value :: lu
+    character(kind=c_char) :: dsetname(*)
+  end function mh5_c_create_dset_scalar_i64
+
   function mh5_c_create_dset_scalar_str(lu,dsetname,length) result(dsetid) &
            bind(C,name='mh5c_create_dset_scalar_str')
     import :: MOLCAS_C_INT, c_char
@@ -463,6 +491,14 @@ interface
     integer(kind=MOLCAS_C_INT), value :: dsetid
     real(kind=MOLCAS_C_REAL) :: val
   end function mh5_c_put_dset_scalar_real
+
+  function mh5_c_put_dset_scalar_i64(dsetid,val) result(rc) &
+           bind(C,name='mh5c_put_dset_scalar_i64')
+    import :: MOLCAS_C_INT, c_int64_t
+    integer(kind=MOLCAS_C_INT) :: rc
+    integer(kind=MOLCAS_C_INT), value :: dsetid
+    integer(kind=c_int64_t) :: val
+  end function mh5_c_put_dset_scalar_i64
 
   function mh5_c_put_dset_scalar_str(dsetid,val) result(rc) &
            bind(C,name='mh5c_put_dset_scalar_str')
@@ -525,6 +561,16 @@ interface
     integer(kind=MOLCAS_C_INT), value :: rank
     integer(kind=MOLCAS_C_INT) :: dims(*)
   end function mh5_c_create_dset_array_real
+
+  function mh5_c_create_dset_array_i64(lu,dsetname,rank,dims) result(dsetid) &
+           bind(C,name='mh5c_create_dset_array_i64')
+    import :: MOLCAS_C_INT, c_char
+    integer(kind=MOLCAS_C_INT) :: dsetid
+    integer(kind=MOLCAS_C_INT), value :: lu
+    character(kind=c_char) :: dsetname(*)
+    integer(kind=MOLCAS_C_INT), value :: rank
+    integer(kind=MOLCAS_C_INT) :: dims(*)
+  end function mh5_c_create_dset_array_i64
 
   function mh5_c_create_dset_array_real_large_uncompressed(lu,dsetname,rank,dims,chunk_dims) result(dsetid) &
            bind(C,name='mh5c_create_dset_array_real_large_uncompressed')
@@ -593,6 +639,23 @@ interface
     integer(kind=MOLCAS_C_INT) :: exts(*), offs(*)
     real(kind=MOLCAS_C_REAL) :: buffer(*)
   end function mh5_c_put_dset_array_real
+
+  function mh5_c_put_dset_array_i64(dsetid,exts,offs,buffer) result(rc) &
+           bind(C,name='mh5c_put_dset_array_i64')
+    import :: MOLCAS_C_INT, c_int64_t
+    integer(kind=MOLCAS_C_INT) :: rc
+    integer(kind=MOLCAS_C_INT), value :: dsetid
+    integer(kind=MOLCAS_C_INT) :: exts(*), offs(*)
+    integer(kind=c_int64_t) :: buffer(*)
+  end function mh5_c_put_dset_array_i64
+
+  function mh5_c_put_dset_array_i64_full(dsetid,buffer) result(rc) &
+           bind(C,name='mh5c_put_dset_array_i64_full')
+    import :: MOLCAS_C_INT, c_int64_t
+    integer(kind=MOLCAS_C_INT) :: rc
+    integer(kind=MOLCAS_C_INT), value :: dsetid
+    integer(kind=c_int64_t) :: buffer(*)
+  end function mh5_c_put_dset_array_i64_full
 
   function mh5_c_put_dset_array_real_noflush(dsetid,exts,offs,buffer) result(rc) &
            bind(C,name='mh5c_put_dset_array_real_noflush')
@@ -795,6 +858,16 @@ function mh5_open_group(lu,groupname) result(groupid)
   call f2c_string(groupname,mh5_lbl)
   groupid = mh5_c_open_group(lu,mh5_lbl)
 end function mh5_open_group
+
+function mh5_create_group(lu,groupname) result(groupid)
+  integer(kind=iwp) :: groupid
+  integer(kind=iwp), intent(in) :: lu
+  character(len=*), intent(in) :: groupname
+  character(len=MH5_MAX_LBL_LEN) :: mh5_lbl
+  call f2c_string(groupname,mh5_lbl)
+  groupid = mh5_c_create_group(lu,mh5_lbl)
+  if (groupid < 0) call abend()
+end function mh5_create_group
 
 subroutine mh5_close_group(id)
   integer(kind=iwp), intent(in) :: id
@@ -1137,6 +1210,15 @@ function mh5_create_dset_scalar_real(lu,dsetname) result(dsetid)
   dsetid = mh5_c_create_dset_scalar_real(lu,mh5_lbl)
 end function mh5_create_dset_scalar_real
 
+function mh5_create_dset_scalar_i64(lu,dsetname) result(dsetid)
+  integer(kind=iwp) :: dsetid
+  integer(kind=iwp), intent(in) :: lu
+  character(len=*), intent(in) :: dsetname
+  character(len=MH5_MAX_LBL_LEN) :: mh5_lbl
+  call f2c_string(dsetname,mh5_lbl)
+  dsetid = mh5_c_create_dset_scalar_i64(lu,mh5_lbl)
+end function mh5_create_dset_scalar_i64
+
 function mh5_create_dset_scalar_str(lu,dsetname,length) result(dsetid)
   integer(kind=iwp) :: dsetid
   integer(kind=iwp), intent(in) :: lu, length
@@ -1157,6 +1239,12 @@ subroutine mh5_put_dset_scalar_real(dsetid,val)
   real(kind=wp), intent(in) :: val
   if (mh5_c_put_dset_scalar_real(dsetid,val) < 0) call abend()
 end subroutine mh5_put_dset_scalar_real
+
+subroutine mh5_put_dset_scalar_i64(dsetid,val)
+  integer(kind=iwp), intent(in) :: dsetid
+  integer(kind=c_int64_t), intent(in) :: val
+  if (mh5_c_put_dset_scalar_i64(dsetid,val) < 0) call abend()
+end subroutine mh5_put_dset_scalar_i64
 
 subroutine mh5_put_dset_scalar_str(dsetid,val)
   integer(kind=iwp), intent(in) :: dsetid
@@ -1216,6 +1304,15 @@ function mh5_create_dset_array_real(lu,dsetname,rank,dims,dyn) result(dsetid)
   end if
 end function mh5_create_dset_array_real
 
+function mh5_create_dset_array_i64(lu,dsetname,rank,dims) result(dsetid)
+  integer(kind=iwp) :: dsetid
+  integer(kind=iwp), intent(in) :: lu, rank, dims(*)
+  character(len=*), intent(in) :: dsetname
+  character(len=MH5_MAX_LBL_LEN) :: mh5_lbl
+  call f2c_string(dsetname,mh5_lbl)
+  dsetid = mh5_c_create_dset_array_i64(lu,mh5_lbl,rank,dims)
+end function mh5_create_dset_array_i64
+
 function mh5_create_dset_real_large_uncompressed(lu,dsetname,rank,dims,chunk_dims) result(dsetid)
   integer(kind=iwp) :: dsetid
   integer(kind=iwp), intent(in) :: lu, rank, dims(*), chunk_dims(*)
@@ -1272,6 +1369,21 @@ subroutine mh5_put_dset_array_real(dsetid,buffer,exts,offs)
   end if
   if (rc < 0) call abend()
 end subroutine mh5_put_dset_array_real
+
+subroutine mh5_put_dset_array_i64(dsetid,buffer,exts,offs)
+  integer(kind=iwp), intent(in) :: dsetid
+  integer(kind=c_int64_t), intent(in) :: buffer(*)
+  integer(kind=iwp), intent(in), optional :: exts(*), offs(*)
+  integer(kind=iwp) :: rc
+  if (present(exts) .and. present(offs)) then
+    rc = mh5_c_put_dset_array_i64(dsetid,exts,offs,buffer)
+  else if (present(exts) .or. present(offs)) then
+    rc = -1
+  else
+    rc = mh5_c_put_dset_array_i64_full(dsetid,buffer)
+  end if
+  if (rc < 0) call abend()
+end subroutine mh5_put_dset_array_i64
 
 subroutine mh5_put_dset_real_hyperslab_noflush(dsetid,buffer,exts,offs)
   integer(kind=iwp), intent(in) :: dsetid, exts(*), offs(*)
@@ -1526,6 +1638,21 @@ subroutine mh5_put_dset_array_int_2d(dsetid,buffer,exts,offs)
   end if
   if (rc < 0) call abend()
 end subroutine mh5_put_dset_array_int_2d
+
+subroutine mh5_put_dset_array_i64_2d(dsetid,buffer,exts,offs)
+  integer(kind=iwp), intent(in) :: dsetid
+  integer(kind=c_int64_t), intent(in) :: buffer(:,:)
+  integer(kind=iwp), intent(in), optional :: exts(*), offs(*)
+  integer(kind=iwp) :: rc
+  if (present(exts) .and. present(offs)) then
+    rc = mh5_c_put_dset_array_i64(dsetid,exts,offs,buffer)
+  else if (present(exts) .or. present(offs)) then
+    rc = -1
+  else
+    rc = mh5_c_put_dset_array_i64_full(dsetid,buffer)
+  end if
+  if (rc < 0) call abend()
+end subroutine mh5_put_dset_array_i64_2d
 
 subroutine mh5_put_dset_array_real_2d(dsetid,buffer,exts,offs)
   integer(kind=iwp), intent(in) :: dsetid

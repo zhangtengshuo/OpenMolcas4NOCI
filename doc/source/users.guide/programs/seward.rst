@@ -175,6 +175,7 @@ In addition to the standard output file
 :program:`SEWARD` may generate the following files:
 :file:`ONEINT`, :file:`ORDINT`, :file:`CHVEC`, :file:`CHRED`, :file:`CHORST`,
 :file:`CHOMAP`, :file:`CHOR2F` (:numref:`UG:sec:files_list`).
+With :kword:`CHH5`, :program:`SEWARD` also creates the portable directory :file:`$Project.NOCI_SEWARD_H5` under :envvar:`MOLCAS_OUTPUT`.
 
 .. _UG\:sec\:seward_input:
 
@@ -293,6 +294,18 @@ General keywords
               %%Keyword: Cholesky <basic>
               <HELP>
               Cholesky decompose the two-electron integrals using default settings.
+              </HELP>
+              </KEYWORD>
+
+:kword:`CHH5`
+  Export C1 AO-basis Cholesky factors, explicit reduced-pair indices, one-electron operators, molecular metadata, and MPI shard metadata in a portable HDF5 directory for NOCI calculations.
+  This keyword requires :kword:`CHOLesky`, an HDF5-enabled build, and C1 symmetry; RI/DF input is rejected by format version 1.
+  Every MPI rank writes one uncompressed factor shard, while rank zero writes :file:`manifest.h5`; the directory is published atomically only after global auxiliary-index coverage has been validated.
+
+  .. xmldoc:: <KEYWORD MODULE="SEWARD" NAME="CHH5" APPEAR="Portable NOCI HDF5 export" KIND="SINGLE" LEVEL="ADVANCED">
+              %%Keyword: CHH5 <advanced>
+              <HELP>
+              Export portable C1 AO Cholesky and one-electron data for NOCI calculations.
               </HELP>
               </KEYWORD>
 

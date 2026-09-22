@@ -75,6 +75,7 @@ set (sources
      rigrot.F90
      saddle.F90
      set_fake_eris.F90
+     seward_hdf5_export_info.F90
      setup_offao.F90
      sizes_of_seward.F90
      soao_info.F90
@@ -95,6 +96,7 @@ set (modfile_list
      phase_info.F90
      pso_stuff.F90
      ricd_info.F90
+     seward_hdf5_export_info.F90
      sizes_of_seward.F90
      soao_info.F90
      symmetry_info.F90

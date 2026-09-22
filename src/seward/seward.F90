@@ -59,6 +59,10 @@ use Integral_interfaces, only: Int_PostProcess, int_wrout
 use stdalloc, only: mma_allocate, mma_deallocate
 use Constants, only: Zero
 use Definitions, only: wp, iwp, u6
+#ifdef _HDF5_
+use Seward_HDF5_Export_Info, only: Seward_HDF5_Export_Enabled
+use Seward_Portable_HDF5, only: Seward_Export_Portable_HDF5
+#endif
 
 implicit none
 integer(kind=iwp), intent(out) :: ireturn
@@ -341,6 +345,9 @@ if (.not. Test) then
 
       if (Cholesky) then ! Cholesky decomposition
         call Cho_MCA_Drv()
+#ifdef _HDF5_
+        if (Seward_HDF5_Export_Enabled) call Seward_Export_Portable_HDF5()
+#endif
         call Get_iArray('NumCho',nChoV,nIrrep)
         if (nPrint(iRout) >= 6) then
           write(u6,'(6X,A,T30,8I5)') 'Cholesky vectors',(nChoV(i),i=1,nIrrep)

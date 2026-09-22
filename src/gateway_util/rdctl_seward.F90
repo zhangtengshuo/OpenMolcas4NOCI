@@ -30,6 +30,7 @@ use Gateway_Info, only: Align_Only, CoM, CutInt, Do_Align, Do_FckInt, Do_GuessOr
 use DKH_Info, only: iCtrLD, BSS, cLightAU, DKroll, IRELAE, LDKRoll, nCtrlD, radiLD
 use Cholesky, only: Span, ThrCom
 use RICD_Info, only: Chol => Cholesky, DiagCheck, Do_acCD_Basis, Do_DCCD, Do_RI, iRI_Type, Skip_High_AC, Thrshld_CD
+use Seward_HDF5_Export_Info, only: Seward_HDF5_Export_Enabled
 use Gateway_global, only: DirInt, Expert, ExtBasDir, Fake_ERIs, Force_Out_of_Core, force_part_c, force_part_p, G_Mode, ifallorb, &
                           iPack, NoTab, Onenly, Prprt, Run_Mode, S_Mode, Short, SW_FileOrb, Test
 use rctfld_module, only: lLangevin, lRF, PCM, RDS
@@ -121,7 +122,7 @@ character(len=*), parameter :: KeyW(188) = ['END ','EMBE','SYMM','FILE','VECT','
                                             'DK1H','DK2H','DK3H','DK3F','RESC','RA0H','RA0F','RAIH','RX2C','RBSS','DCCD','BSSM', &
                                             'AMFI','AMF1','AMF2','AMF3','FAKE','FINI','MGAU','PART','FPCO','FPPR','NOTA','WELL', &
                                             'NODK','ONEO','TEST','SDIP','EPOT','EFLD','FLDG','ANGM','UPON','DOWN','OMQI','AMPR', &
-                                            'DSHD','NOPA','    ','PKTH','SKIP','EXTR','RF-I','GRID','CLIG','NEMO','RMAT','RMEA', &
+                                            'DSHD','NOPA','CHH5','PKTH','SKIP','EXTR','RF-I','GRID','CLIG','NEMO','RMAT','RMEA', &
                                             'RMER','RMQC','RMDI','RMEQ','RMBP','GIAO','NOCH','CHOL','FCD ','THRC','1CCD','1C-C', &
                                             'CHOI','RP-C','SADD','CELL','SPAN','SPRE','LOW ','MEDI','HIGH','DIAG','RIC ','RIJ ', &
                                             'RIJK','RICD','XRIC','NOGU','RELA','RLOC','FOOC','CDTH','SHAC','KHAC','ACD ','FAT-', &
@@ -231,6 +232,7 @@ stepFac1 = 60.0_wp
 iOptimType = 1
 gradLim = Zero
 Do_OneEl = .true.
+Seward_HDF5_Export_Enabled = .false.
 Vlct_ = .false.
 #ifdef _FDE_
 ! Embedding
@@ -1519,6 +1521,19 @@ do
         ! iPack=1   : do not pack 2el integrals
 
         iPack = 1
+
+      case (KeyW(87))
+        !                                                              *
+        !***** CHH5 ****************************************************
+        !                                                              *
+        ! Export portable C1 AO Cholesky and one-electron data to HDF5.
+
+#       ifdef _HDF5_
+        Seward_HDF5_Export_Enabled = .true.
+#       else
+        call WarningMessage(2,'CHH5 requires an OpenMolcas build with HDF5 support.')
+        call Quit_OnUserError()
+#       endif
 
       case (KeyW(88))
         !                                                              *
@@ -3302,6 +3317,21 @@ if (Chol) then
       ThrCom = Thrshld_CD
     end if
     if (spanCD >= Zero) Span = min(spanCD,One)
+  end if
+end if
+
+if (Seward_HDF5_Export_Enabled) then
+  if (.not. Chol) then
+    call WarningMessage(2,'CHH5 requires an active conventional Cholesky decomposition.')
+    call Quit_OnUserError()
+  end if
+  if (Do_RI) then
+    call WarningMessage(2,'CHH5 does not support RI/DF input in format version 1.')
+    call Quit_OnUserError()
+  end if
+  if (nIrrep /= 1) then
+    call WarningMessage(2,'CHH5 format version 1 supports C1 symmetry only.')
+    call Quit_OnUserError()
   end if
 end if
 !                                                                      *

@@ -42,8 +42,8 @@ char *getenvc(const char *);
 /* MAXENV = max len of MOLCAS related ENV in total */
 /* I do NOT care about memory leak in this code! */
 
-#define MAXSTR 256
-#define MAXENV 4096
+#define MAXSTR 4096
+#define MAXENV 65536
 static char MOLCAS_ENV[MAXENV];
 
 char *getenvc(const char *name) {
@@ -56,7 +56,7 @@ char *getenvc(const char *name) {
   Name[0] = '\n';
   Name[1] = 0;
   i = strlen(name);
-  if (i > MAXSTR - 2) {
+  if (i > MAXSTR - 3) {
     fprintf(stderr, "Environment variable %s is too long!\n", name);
     return NULL;
   }
@@ -81,7 +81,7 @@ char *getenvc(const char *name) {
     return NULL;
   }
   i = ptr2 - ptr;
-  if (i > MAXSTR) {
+  if (i >= MAXSTR) {
     fprintf(stderr, "Environment value for %s is too long!\n", name);
     return NULL;
   }

@@ -19,10 +19,10 @@ implicit none
 character(len=*), intent(in) :: filename
 logical(kind=iwp), intent(out) :: exists
 integer(kind=iwp) :: lRealName
-character(len=256) :: RealName
+character(len=4096) :: RealName
 #ifdef _SOLARIS_
 integer(kind=iwp) :: n, irc
-character(len=256) :: FTMP1, FTMP2
+character(len=4096) :: FTMP1, FTMP2
 
 n = len(filename)
 do

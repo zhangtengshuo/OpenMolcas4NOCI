@@ -15,8 +15,8 @@
 
 #include "compiler_features.h"
 #include "macros.fh"
-! from getenvc.c
-#define MAXSTR 256
+! Keep logical-file paths aligned with the supported environment-path size.
+#define MAXSTR 4096
 
 module prgm
 

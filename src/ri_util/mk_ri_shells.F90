@@ -41,7 +41,7 @@ integer(kind=iwp), intent(in) :: LuRd
 integer(kind=iwp) :: BasisTypes(4), i, iAng, ib, iCnttp, iEnd, iEnds, Ierr, iLast3, Indx, iPrint, iRout, iSh, iShll, iSph, iStrt, &
                      j, jShll, lAng, lSTDINP, Lu_lib, mCnttp, mdc, n, nCnt, nCntrc, nn, nPrim, nSet
 logical(kind=iwp) :: Hit, IfTest
-character(len=256) :: Basis_lib, Fname
+character(len=4096) :: Basis_lib, Fname
 character(len=180) :: BSLB, Line, Ref(2)
 character(len=80) :: atom, atomb, author, Aux, basis, BSLbl, btype, CGTO
 character(len=180), allocatable :: STDINP(:) !CGGn

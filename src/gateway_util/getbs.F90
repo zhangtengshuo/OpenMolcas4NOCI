@@ -53,8 +53,8 @@ integer(kind=iwp) :: i, iAIMP, iAng, iDominantSet, iEnd, iErr, iFlgOne, iFrst, i
                      iValSh, j, j1, j2, jNow, jPrSh, jValSh, lAng, lUnit, LUQRP, mCGTO(0:iTabMx), mDel, mSOC, mVal, nAdded, nAIMP, &
                      nCGTO(0:iTabMx), nCntrc, nEorb, nPrim, nProj, Nwords
 real(kind=wp) :: Coeff, RatioThres
-character(len=263) :: Filename
-character(len=256) :: Basis_Lib, DirName
+character(len=8192) :: Filename
+character(len=4096) :: Basis_Lib, DirName
 character(len=180) :: Line
 character(len=80) :: Atom, Filenm, bType
 character(len=24) :: Words(2)  ! CGGn

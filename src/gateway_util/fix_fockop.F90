@@ -51,7 +51,7 @@ integer(kind=iwp) :: BasisTypes(4), i, iAng, iAtom, iB, iBF, iC, iCmp_a, iCmp_r,
                      nScr1, nScr2, nScr3, nSRR
 real(kind=wp) :: A(3), C_ik, C_jk, Charge_Actual, Charge_Effective, Check, D, e, e12i, qTest, Test_Charge, Tmp, xFactor, xMass
 logical(kind=iwp) :: Do_Cycle, lPP, Try_Again
-character(len=256) :: Basis_lib, Fname
+character(len=4096) :: Basis_lib, Fname
 character(len=180) :: Ref(2)
 character(len=80) :: Bsl_, BSLbl
 integer(kind=iwp), allocatable :: List(:), List_Add(:), List_AE(:)

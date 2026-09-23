@@ -45,7 +45,7 @@ character(len=4) :: label
 character(len=13) :: DefNm = 'basis_library'
 character(len=180) :: Ref(2)
 character(len=storageSize) :: sBasis
-character(len=256) :: Basis_lib, Fname
+character(len=4096) :: Basis_lib, Fname
 character(len=180), allocatable :: STDINP(:)
 ! external functions and procedures
 integer(kind=iwp), external :: iMostAbundantIsotope, iCLast

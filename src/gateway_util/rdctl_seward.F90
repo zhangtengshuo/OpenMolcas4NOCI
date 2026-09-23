@@ -80,7 +80,7 @@ logical(kind=iwp) :: AnyMode, Basis_test, BasisSet, CholeskyWasSet, Convert, Coo
                      WriteZMat
 character(len=LenIn) :: CtrLDK(10), dbas
 character(len=512) :: Align_Weights = 'MASS'
-character(len=256) :: BasLib, Basis_lib, Directory, Fname, GeoDir, KeepBasis, Message, Project, temp1, temp2
+character(len=4096) :: BasLib, Basis_lib, Directory, Fname, GeoDir, KeepBasis, Message, Project, temp1, temp2
 character(len=180) :: filename, KeepGroup, Key, KWord, Ref(2)
 character(len=80) :: BSLbl, ChSkip, Title(10) = ''
 character(len=72) :: Header(2) = ''

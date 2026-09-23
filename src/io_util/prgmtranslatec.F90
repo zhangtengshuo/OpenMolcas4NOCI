@@ -31,7 +31,7 @@ character(kind=c_char), intent(in) :: InStr(*)
 integer(kind=MOLCAS_C_INT), intent(in) :: l1, Par
 character(kind=c_char), intent(_OUT_) :: OutStr(*)
 integer(kind=MOLCAS_C_INT), intent(out) :: l2
-#define MAXSTR 1024
+#define MAXSTR 4096
 character(len=MAXSTR) :: TmpStr, TmpStr2
 integer(kind=iwp) :: i
 

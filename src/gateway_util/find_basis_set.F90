@@ -25,8 +25,8 @@ character(len=*), intent(inout) :: DirName
 character(len=*), intent(in) :: ExtBasDir, bType
 integer(kind=iwp) :: i, iAbsName
 logical(kind=iwp) :: Exists
-character(len=512) :: tmp
-character(len=256) :: Molcas, CurrDir
+character(len=8192) :: tmp
+character(len=4096) :: Molcas, CurrDir
 
 if (ExtBasDir /= ' ') then
   i = index(ExtBasDir,' ')

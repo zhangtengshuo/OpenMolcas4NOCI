@@ -1,0 +1,23 @@
+name: openmolcas4noci-v26.06.1
+channels:
+  - conda-forge
+dependencies:
+  - c-compiler=1.11
+  - cxx-compiler=1.11
+  - fortran-compiler=1.11
+  - cmake=4.4.3
+  - ninja=1.13.2
+  - make=4.4.1
+  - openmpi=5.0.10
+  - hdf5=2.2.0=mpi_openmpi_ha740f27_0
+  - globalarrays=5.9.2=mpi_openmpi_h2d4e874_2
+  - mkl=2026.1.0
+  - mkl-devel=2026.1.0
+  - libxc=7.1.2=cpu_h54041b4_1
+  - python=3.12
+  - numpy
+  - pyyaml
+  - pyparsing
+  - perl
+  - pkg-config
+  - pip

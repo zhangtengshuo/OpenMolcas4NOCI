@@ -1,0 +1,26 @@
+!***********************************************************************
+! This file is part of OpenMolcas.                                     *
+!                                                                      *
+! OpenMolcas is free software; you can redistribute it and/or modify   *
+! it under the terms of the GNU Lesser General Public License, v. 2.1. *
+! OpenMolcas is distributed in the hope that it will be useful, but it *
+! is provided "as is" and without any express or implied warranties.   *
+! For more details see the full text of the license in the file        *
+! LICENSE or in <http://www.gnu.org/licenses/>.                        *
+!***********************************************************************
+
+subroutine MemRys_g(iSD4,nSD,MemPrm)
+
+use Definitions, only: iwp
+
+implicit none
+integer(kind=iwp), intent(in) :: nSD, iSD4(0:nSD,4)
+integer(kind=iwp), intent(out) :: MemPrm
+integer(kind=iwp) :: iAnga(4), nRys
+
+iAnga(:) = iSD4(1,:)
+call MemRg1(iAnga,nRys,MemPrm)
+
+return
+
+end subroutine MemRys_g

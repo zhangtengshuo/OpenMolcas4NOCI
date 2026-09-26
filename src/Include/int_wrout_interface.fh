@@ -1,0 +1,24 @@
+!***********************************************************************
+! This file is part of OpenMolcas.                                     *
+!                                                                      *
+! OpenMolcas is free software; you can redistribute it and/or modify   *
+! it under the terms of the GNU Lesser General Public License, v. 2.1. *
+! OpenMolcas is distributed in the hope that it will be useful, but it *
+! is provided "as is" and without any express or implied warranties.   *
+! For more details see the full text of the license in the file        *
+! LICENSE or in <http://www.gnu.org/licenses/>.                        *
+!***********************************************************************
+
+#ifdef _CALLING_
+
+ijkl,AOInt,SOInt,nSOint,iSOSym,nSOs,TInt,nTInt,mSym,nSD,iSD4 &
+
+#else
+
+integer(kind=iwp), intent(in) :: ijkl, nSOint, nSOs, iSOSym(2,nSOs), nTInt, mSym, nSD, iSD4(0:nSD,4)
+real(kind=wp), intent(in) :: AOInt(*), SOInt(*)
+real(kind=wp), intent(inout) :: TInt(nTInt)
+
+#endif
+
+#undef _CALLING_

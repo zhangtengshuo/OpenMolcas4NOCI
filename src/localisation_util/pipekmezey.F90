@@ -1,0 +1,120 @@
+!***********************************************************************
+! This file is part of OpenMolcas.                                     *
+!                                                                      *
+! OpenMolcas is free software; you can redistribute it and/or modify   *
+! it under the terms of the GNU Lesser General Public License, v. 2.1. *
+! OpenMolcas is distributed in the hope that it will be useful, but it *
+! is provided "as is" and without any express or implied warranties.   *
+! For more details see the full text of the license in the file        *
+! LICENSE or in <http://www.gnu.org/licenses/>.                        *
+!                                                                      *
+! Copyright (C) Yannick Carissan                                       *
+!               Thomas Bondo Pedersen                                  *
+!***********************************************************************
+
+!#define _SCR_DEFAULT_
+subroutine PipekMezey(Functional,CMO,nBas,nOrb2Loc,nFro,nSym,Converged)
+! Author: Y. Carissan [modified by T.B. Pedersen].
+!
+! Purpose: Pipek-Mezey localisation of occupied orbitals.
+
+use Index_Functions, only: nTri_Elem
+use Localisation_globals, only: BName, Debug, nAtoms, nBas_per_Atom, nBas_Start, Ovlp, ScrFac
+use OneDat, only: sNoOri
+use stdalloc, only: mma_allocate, mma_deallocate
+use Constants, only: Zero
+use Definitions, only: wp, iwp, u6
+#ifdef _SCR_DEFAULT_
+use Localisation_globals, only: OptMeth
+use Constants, only: Half
+#endif
+
+implicit none
+real(kind=wp), intent(out) :: Functional
+real(kind=wp), intent(inout) :: CMO(*)
+integer(kind=iwp), intent(in) :: nSym, nBas(nSym), nOrb2Loc(nSym), nFro(nSym)
+logical(kind=iwp), intent(out) :: Converged
+integer(kind=iwp) :: iComp, iOpt, irc, iSyLbl, kOffC, lOaux, nBasT, nFroT, nOrb2LocT
+real(kind=wp), allocatable :: Oaux(:), PA(:,:,:)
+character(len=8) :: Label
+character(len=*), parameter :: SecNam = 'PipekMezey'
+
+! Symmetry is NOT allowed!!
+! -------------------------
+
+if (nSym /= 1) call SysAbendMsg(SecNam,'Symmetry not implemented!','Sorry!')
+
+! Initializations.
+! ----------------
+
+Functional = -huge(Functional)
+
+nBasT = nBas(1)
+nOrb2LocT = nOrb2Loc(1)
+nFroT = nFro(1)
+kOffC = nBasT*nFroT+1
+
+if (ScrFac /= Zero) call Scram(CMO(kOffC),nSym,[nBasT],[nOrb2LocT],ScrFac)
+#ifdef _SCR_DEFAULT_
+if ((OptMeth == 2) .or. (OptMeth == 4) .or. (OptMeth == 5)) call Scram(CMO(kOffC),nSym,[nBasT],[nOrb2LocT],Half)
+#endif
+
+Converged = .false.
+
+! Read overlap matrix.
+! --------------------
+
+lOaux = nTri_Elem(nBasT)+4
+call mma_allocate(Ovlp,nBasT,nBasT,label='Ovlp')
+call mma_allocate(Oaux,lOaux,label='AuxOvlp')
+
+irc = -1
+iOpt = ibset(0,sNoOri)
+iComp = 1
+iSyLbl = 1
+Label = 'Mltpl  0'
+call RdOne(irc,iOpt,Label,iComp,Oaux,iSyLbl)
+if (irc /= 0) then
+  write(u6,*) SecNam,': RdOne returned ',irc
+  write(u6,*) 'Label = ',Label,'  iSyLbl = ',iSyLbl
+  call SysAbendMsg(SecNam,'I/O error in RdOne',' ')
+end if
+
+if (Debug) then
+  write(u6,*)
+  write(u6,*) ' Triangular overlap matrix at start'
+  write(u6,*) ' ----------------------------------'
+  call TriPrt('Overlap',' ',Oaux,nBasT)
+end if
+
+call Tri2Rec(Oaux,Ovlp,nBasT)
+call mma_deallocate(Oaux)
+
+! Allocate and get index arrays for basis functions per atom.
+! -----------------------------------------------------------
+
+call mma_allocate(nBas_per_Atom,nAtoms,label='nB_per_Atom')
+call mma_allocate(nBas_Start,nAtoms,label='nB_Start')
+call BasFun_Atom(nBas_per_Atom,nBas_Start,BName,nBasT,nAtoms,Debug)
+
+! Allocate PA array.
+! ------------------
+call mma_Allocate(PA,nOrb2LocT,nOrb2LocT,nAtoms,Label='PA')
+PA(:,:,:) = Zero
+
+! Localise orbitals.
+! ------------------
+
+! this offset to get to the part of CMO which should be localized.
+if (debug) call RecPrt('cMO before localization',' ',cMO,nBasT,norb2locT)
+call PipekMezey_Iter(Functional,CMO(kOffC),PA,nBasT,nOrb2LocT,Converged)
+if (debug) call RecPrt('cMO after localization',' ',cMO,nBasT,norb2locT)
+! De-allocations.
+! ---------------
+
+call mma_deallocate(PA)
+call mma_deallocate(nBas_per_Atom)
+call mma_deallocate(nBas_Start)
+call mma_deallocate(Ovlp)
+
+end subroutine PipekMezey

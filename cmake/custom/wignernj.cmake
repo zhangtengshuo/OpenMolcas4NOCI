@@ -91,18 +91,37 @@ endif ()
 # BUILD_BYPRODUCTS is required by the Ninja generator: the static
 # libraries are linked into OpenMolcas executables by file path, so Ninja
 # must know that this ExternalProject is the rule that produces them.
-ExternalProject_Add (${EP_PROJECT}
-                     PREFIX ${CUSTOM_WIGNERNJ_LOCATION}
-                     CMAKE_ARGS "${WIGNERNJCMakeArgs}"
-                     GIT_REPOSITORY ${reference_git_repo}
-                     GIT_TAG ${reference_git_commit}
-                     GIT_PROGRESS 1
-                     UPDATE_DISCONNECTED ${EP_SkipUpdate}
-                     INSTALL_DIR "${PROJECT_BINARY_DIR}"
-                     BUILD_BYPRODUCTS
-                       ${PROJECT_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}wignernj_f03${CMAKE_STATIC_LIBRARY_SUFFIX}
-                       ${PROJECT_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}wignernj${CMAKE_STATIC_LIBRARY_SUFFIX}
-)
+if (WIGNERNJ_SOURCE_DIR)
+  get_filename_component (WIGNERNJ_SOURCE_DIR_ABSOLUTE "${WIGNERNJ_SOURCE_DIR}" ABSOLUTE)
+  if (NOT EXISTS "${WIGNERNJ_SOURCE_DIR_ABSOLUTE}/CMakeLists.txt")
+    message (FATAL_ERROR "WIGNERNJ_SOURCE_DIR does not contain libwignernj sources: ${WIGNERNJ_SOURCE_DIR_ABSOLUTE}")
+  endif ()
+  message ("Using pre-fetched libwignernj source: ${WIGNERNJ_SOURCE_DIR_ABSOLUTE}")
+  ExternalProject_Add (${EP_PROJECT}
+                       PREFIX ${CUSTOM_WIGNERNJ_LOCATION}
+                       CMAKE_ARGS "${WIGNERNJCMakeArgs}"
+                       SOURCE_DIR "${WIGNERNJ_SOURCE_DIR_ABSOLUTE}"
+                       DOWNLOAD_COMMAND ""
+                       UPDATE_COMMAND ""
+                       INSTALL_DIR "${PROJECT_BINARY_DIR}"
+                       BUILD_BYPRODUCTS
+                         ${PROJECT_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}wignernj_f03${CMAKE_STATIC_LIBRARY_SUFFIX}
+                         ${PROJECT_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}wignernj${CMAKE_STATIC_LIBRARY_SUFFIX}
+  )
+else ()
+  ExternalProject_Add (${EP_PROJECT}
+                       PREFIX ${CUSTOM_WIGNERNJ_LOCATION}
+                       CMAKE_ARGS "${WIGNERNJCMakeArgs}"
+                       GIT_REPOSITORY ${reference_git_repo}
+                       GIT_TAG ${reference_git_commit}
+                       GIT_PROGRESS 1
+                       UPDATE_DISCONNECTED ${EP_SkipUpdate}
+                       INSTALL_DIR "${PROJECT_BINARY_DIR}"
+                       BUILD_BYPRODUCTS
+                         ${PROJECT_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}wignernj_f03${CMAKE_STATIC_LIBRARY_SUFFIX}
+                         ${PROJECT_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}wignernj${CMAKE_STATIC_LIBRARY_SUFFIX}
+  )
+endif ()
 
 ExternalProject_Add_Step (${EP_PROJECT} update_hash
                           COMMAND echo ${reference_git_commit} > ${hash_file}

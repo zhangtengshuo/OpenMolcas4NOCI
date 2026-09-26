@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+prefix=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd -P)
+molcas="$prefix/libexec/openmolcas4noci"
+
+export MOLCAS="$molcas"
+export OPENMOLCAS="$molcas"
+export MOLCAS_LIBMOLCAS_SO="$molcas/lib/libmolcas.so"
+export PATH="$prefix/bin:$molcas/bin:$PATH"
+
+exec "$molcas/pymolcas" "$@"

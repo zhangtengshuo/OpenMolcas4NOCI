@@ -1,3 +1,35 @@
+# OpenMolcas4NOCI
+
+OpenMolcas4NOCI is a controlled derivative of OpenMolcas 26.06 for the integral-preparation workflow used by NOCI.jl; it is not a replacement for the general OpenMolcas distribution.
+
+This release line is based on upstream OpenMolcas commit `4e52760a9bec07a7d253ee2fc5ac29fc5203bf27` and adds the NOCI-oriented SEWARD `CHH5` portable HDF5 export, EXPBAS `GUGAORDER`, selected integral-accumulation corrections, long installation-path support, a relocatable launcher, and a pinned Linux x86-64 Conda recipe.
+
+## Conda installation
+
+The package is not published yet. A locally indexed candidate can be installed together with its conda-forge runtime dependencies as follows:
+
+```bash
+conda create -n openmolcas4noci --override-channels -c ./local-channel -c conda-forge openmolcas4noci=26.06.1
+conda activate openmolcas4noci
+pymolcas4noci --help
+```
+
+After publication, replace the local channel path with the announced public channel.
+
+The package installs the dedicated runtime below the Conda prefix at `libexec/openmolcas4noci` and exposes `pymolcas4noci` as its public command, so it does not replace a separately installed `pymolcas` command.
+
+See `conda/README.md` for reproducible build instructions.
+
+## NOCI.jl integration
+
+NOCI.jl uses the package to locate `pymolcas4noci`, `libmolcas.so`, MPI, HDF5, and the `CHH5` export format without requiring users to configure site-specific OpenMolcas paths.
+
+Managed installation in NOCI.jl remains unavailable until this package is published and NOCI.jl points its CondaPkg channel configuration at the public channel.
+
+## Upstream OpenMolcas
+
+The remainder of this document is the upstream OpenMolcas overview retained for license, citation, build, and documentation context.
+
 OpenMolcas
 ==========
 

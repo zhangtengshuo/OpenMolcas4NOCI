@@ -222,6 +222,8 @@ list (REVERSE basedirs)
 # get version from git if available, otherwise look in .molcasversion
 #====================================================================
 
+set (OPENMOLCAS_RELEASE_VERSION "" CACHE STRING "Explicit version label for a reproducible binary release")
+
 message ("Detecting Molcas version info:")
 
 set (ENV{MOLCAS} ${PROJECT_BINARY_DIR})
@@ -362,6 +364,10 @@ elseif (EXISTS ${MOLCAS_VERSION_FILE})
 else ()
   set (OPENMOLCAS_VERSION "unknown")
   set (GIT_BRANCH "")
+endif ()
+
+if (NOT "${OPENMOLCAS_RELEASE_VERSION}" STREQUAL "")
+  set (OPENMOLCAS_VERSION "${OPENMOLCAS_RELEASE_VERSION}")
 endif ()
 
 message ("-- OPENMOLCAS_VERSION: ${OPENMOLCAS_VERSION}")

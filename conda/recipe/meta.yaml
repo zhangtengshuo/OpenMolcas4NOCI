@@ -1,0 +1,83 @@
+{% set version = "26.06.1" %}
+
+package:
+  name: openmolcas4noci
+  version: {{ version }}
+
+source:
+  - path: ../..
+  - url: https://github.com/susilehtola/libwignernj/archive/refs/tags/v0.6.0.tar.gz
+    sha256: bceaca2cfb50b3b7ea15e889c152c174b23f3eed384901897f5c245229142aaf
+    folder: wignernj-source
+
+build:
+  number: 0
+  string: openmpi_hdf5_mkl_0
+  skip: true  # [not linux64]
+  include_recipe: false
+  binary_relocation: true
+  detect_binary_files_with_prefix: true
+  script_env:
+    - OPENMOLCAS4NOCI_SOURCE_COMMIT
+
+requirements:
+  build:
+    - {{ compiler('c') }}
+    - {{ compiler('cxx') }}
+    - {{ compiler('fortran') }}
+    - cmake >=4.0,<5
+    - make
+    - ninja
+    - patchelf
+    - pkg-config
+    - ripgrep
+  host:
+    - globalarrays 5.9.2 mpi_openmpi_*
+    - hdf5 2.2.* mpi_openmpi_*
+    - libxc 7.1.2 cpu_*
+    - mkl 2026.1.*
+    - mkl-devel 2026.1.*
+    - openmpi 5.*
+    - numpy
+    - pyparsing
+    - pyyaml
+    - python 3.12.*
+  run:
+    - globalarrays 5.9.2 mpi_openmpi_*
+    - hdf5 2.2.* mpi_openmpi_*
+    - libxc 7.1.2 cpu_*
+    - mkl 2026.1.*
+    - openmpi 5.*
+    - numpy
+    - perl
+    - pyparsing
+    - pyyaml
+    - python 3.12.*
+
+test:
+  source_files:
+    - conda/recipe/tests/h2_chh5.input
+    - conda/recipe/tests/validate_chh5.py
+  requires:
+    - h5py
+    - numpy
+  commands:
+    - pymolcas4noci --help
+    - test -f "$PREFIX/libexec/openmolcas4noci/lib/libmolcas.so"
+    - test -f "$PREFIX/libexec/openmolcas4noci/data/seward.prgm"
+
+about:
+  home: https://github.com/zhangtengshuo/OpenMolcas4NOCI
+  license: LGPL-2.1-only
+  license_file:
+    - LICENSE
+    - wignernj-source/LICENSE
+  summary: Controlled MPI-enabled OpenMolcas runtime for NOCI.jl
+  description: OpenMolcas 26.06 with the versioned OpenMolcas4NOCI revision 1 fixes and portable SEWARD HDF5 export required by NOCI.jl.
+  dev_url: https://github.com/zhangtengshuo/OpenMolcas4NOCI
+
+extra:
+  upstream_commit: 4e52760a9bec07a7d253ee2fc5ac29fc5203bf27
+  noci_revision: 1
+  recipe-maintainers:
+    - zhangtengshuo

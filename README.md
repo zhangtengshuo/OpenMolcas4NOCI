@@ -22,7 +22,7 @@ GitHub hosts the native Conda package; it is not a Conda channel and must not be
 
 The package installs its runtime at `libexec/openmolcas4noci` and exposes `bin/pymolcas4noci`, preserving separately installed OpenMolcas commands.
 
-This build uses OpenMPI, parallel HDF5, Global Arrays, MKL and Libxc on Linux x86-64; macOS, Windows and ARM packages are not provided by this release.
+This build requires glibc 2.28 or newer and uses OpenMPI, parallel HDF5, Global Arrays, MKL and Libxc on Linux x86-64; macOS, Windows and ARM packages are not provided by this release.
 
 The release also provides a complete runtime dependency lock, an explicit Conda specification and a machine-readable release manifest with source revision, package identity and SHA-256.
 

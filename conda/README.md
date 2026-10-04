@@ -4,10 +4,12 @@ The recipe builds the Linux x86-64 `openmolcas4noci` package from a clean checko
 
 The OpenMolcas tree is installed below `$PREFIX/libexec/openmolcas4noci`, and the public executable is `$PREFIX/bin/pymolcas4noci`; this avoids replacing an unrelated general-purpose OpenMolcas command.
 
+Set `CONDA_OVERRIDE_GLIBC=2.28` while solving the release build environments so transitive MPI network libraries also respect the target Linux baseline.
+
 Check out the exact source commit with a clean worktree, then run the build with an isolated `conda-build` and `boa` installation while recording that commit in the release manifest:
 
 ```bash
-OPENMOLCAS4NOCI_SOURCE_COMMIT="$(git rev-parse HEAD)" CONDA_CHANNEL_PRIORITY=flexible conda mambabuild conda/recipe --override-channels -c conda-forge --no-lock --no-include-recipe --no-anaconda-upload
+CONDA_OVERRIDE_GLIBC=2.28 OPENMOLCAS4NOCI_SOURCE_COMMIT="$(git rev-parse HEAD)" CONDA_CHANNEL_PRIORITY=flexible conda mambabuild conda/recipe --override-channels -c conda-forge --no-lock --no-include-recipe --no-anaconda-upload
 ```
 
 The rendered recipe is retained as a separate release artifact instead of being copied into the package, because conda-build otherwise records the operator's local recipe path in generated package metadata.
@@ -43,7 +45,7 @@ Do not install the program package into the dependency-only environment or upgra
 
 ## Julia shared-library compatibility
 
-The release recipe uses GCC 14, MKL 2025.3, OpenMPI 5.0.10 and NumPy 2.3-compatible packages, with the GCC runtime constrained below version 15 and the Linux build sysroot fixed at glibc 2.17.
+The release recipe uses GCC 14, MKL 2025.3, OpenMPI 5.0.10 and NumPy 2.3-compatible packages, with the GCC runtime constrained below version 15 and the Linux build sysroot fixed at glibc 2.28.
 
 Julia 1.12.6 bundles a C++ runtime exposing `GLIBCXX_3.4.33`; the dependency lock must satisfy CondaPkg's `libstdcxx = "<=julia"` constraint before loading `libmolcas.so` into Julia.
 

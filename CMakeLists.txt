@@ -2693,6 +2693,8 @@ set_target_properties (libmolcas PROPERTIES PREFIX "")
 set (MOLCAS_LIBRARIES "libmolcas")
 target_link_libraries (libmolcas ${utils_obj})
 target_link_libraries (libmolcas mods_obj)
+# Shared-library consumers must resolve external symbols without executable preloads.
+target_link_libraries (libmolcas PRIVATE ${EXTERNAL_LIBRARIES})
 # also create a static library!
 if (BUILD_SHARED_LIBS AND BUILD_STATIC_LIBS)
   add_library (libmolcas_static STATIC "")

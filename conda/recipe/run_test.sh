@@ -5,6 +5,14 @@ test_root=$(mktemp -d "${TMPDIR:-/tmp}/openmolcas4noci-conda-test.XXXXXX")
 trap 'rm -rf -- "$test_root"' EXIT
 test_data_root="$SRC_DIR/conda/recipe/tests"
 
+python - <<'PYTEST'
+import ctypes
+import os
+from pathlib import Path
+library = Path(os.environ["PREFIX"]) / "libexec/openmolcas4noci/lib/libmolcas.so"
+ctypes.CDLL(str(library), mode=os.RTLD_NOW | os.RTLD_LOCAL)
+PYTEST
+
 cp "$test_data_root/h2_chh5.input" "$test_root/h2_serial.input"
 cp "$test_data_root/h2_chh5.input" "$test_root/h2_mpi.input"
 mkdir -p "$test_root/serial-work" "$test_root/mpi-work"

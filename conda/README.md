@@ -40,3 +40,13 @@ The program and dependency directories can be relocated together while preservin
 Program versions may share an accepted dependency lock only after their serial, MPI and NOCI.jl integration tests pass against that lock.
 
 Do not install the program package into the dependency-only environment or upgrade dependencies implicitly when switching program versions.
+
+## Julia shared-library compatibility
+
+The release recipe uses GCC 14, MKL 2025.3, OpenMPI 5.0.10 and NumPy 2.3-compatible packages, with the GCC runtime constrained below version 15.
+
+Julia 1.12.6 bundles a C++ runtime exposing `GLIBCXX_3.4.33`; the dependency lock must satisfy CondaPkg's `libstdcxx = "<=julia"` constraint before loading `libmolcas.so` into Julia.
+
+MKL 2026.1 requires GCC 15 or newer runtime packages and is therefore unsuitable for this release's shared-library integration contract.
+
+Standalone local builds described under `build-support/` have a separate environment lock and do not define the Conda release dependency lock.

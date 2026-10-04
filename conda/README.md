@@ -43,7 +43,7 @@ Do not install the program package into the dependency-only environment or upgra
 
 ## Julia shared-library compatibility
 
-The release recipe uses GCC 14, MKL 2025.3, OpenMPI 5.0.10 and NumPy 2.3-compatible packages, with the GCC runtime constrained below version 15.
+The release recipe uses GCC 14, MKL 2025.3, OpenMPI 5.0.10 and NumPy 2.3-compatible packages, with the GCC runtime constrained below version 15 and the Linux build sysroot fixed at glibc 2.17.
 
 Julia 1.12.6 bundles a C++ runtime exposing `GLIBCXX_3.4.33`; the dependency lock must satisfy CondaPkg's `libstdcxx = "<=julia"` constraint before loading `libmolcas.so` into Julia.
 

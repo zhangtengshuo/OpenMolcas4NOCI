@@ -31,6 +31,7 @@ requirements:
     - patchelf
     - pkg-config
     - ripgrep
+    - sysroot_linux-64 2.17.*
   host:
     - libgcc >=14,<15
     - libstdcxx >=14,<15

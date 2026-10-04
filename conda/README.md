@@ -20,6 +20,8 @@ The recipe supports Conda's deliberately long build and test prefixes, rewrites 
 
 ## Separate program and runtime dependencies
 
+When installing a local program archive, install its dependencies first; Micromamba treats archive filenames as explicit package inputs.
+
 The release's `runtime-dependencies-linux-64.explicit.txt` contains only the runtime dependencies and pins every package by its conda-forge URL and SHA-256.
 
 `runtime-dependencies-linux-64.json` contains the corresponding package identities and SHA-256 values for installer bookkeeping.

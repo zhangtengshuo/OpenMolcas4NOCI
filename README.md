@@ -8,15 +8,19 @@ This release line is based on upstream OpenMolcas commit `4e52760a9bec07a7d253ee
 
 The Linux x86-64 package is distributed as a checksummed asset of the [v26.06.1 GitHub Release](https://github.com/zhangtengshuo/OpenMolcas4NOCI/releases/tag/v26.06.1).
 
-Download the package and checksums from that release, verify the checksum, and install the local package together with its conda-forge dependencies:
+Download the package, the complete runtime dependency specification and the checksums from that release, verify the checksums, then install the dependencies before the local program package:
 
 ```bash
 curl -fLO https://github.com/zhangtengshuo/OpenMolcas4NOCI/releases/download/v26.06.1/openmolcas4noci-26.06.1-openmpi_hdf5_mkl_0.tar.bz2
+curl -fLO https://github.com/zhangtengshuo/OpenMolcas4NOCI/releases/download/v26.06.1/runtime-dependencies-linux-64.explicit.txt
 curl -fLO https://github.com/zhangtengshuo/OpenMolcas4NOCI/releases/download/v26.06.1/SHA256SUMS
 sha256sum --ignore-missing -c SHA256SUMS
-micromamba create -y -n openmolcas4noci --override-channels -c conda-forge ./openmolcas4noci-26.06.1-openmpi_hdf5_mkl_0.tar.bz2
+micromamba create -y -n openmolcas4noci -f runtime-dependencies-linux-64.explicit.txt
+micromamba install -y --offline --no-deps -n openmolcas4noci ./openmolcas4noci-26.06.1-openmpi_hdf5_mkl_0.tar.bz2
 micromamba run -n openmolcas4noci pymolcas4noci --help
 ```
+
+A local package archive is treated as an explicit package installation by Micromamba, so passing that archive alone does not resolve its dependencies.
 
 GitHub hosts the native Conda package; it is not a Conda channel and must not be passed as a channel URL.
 

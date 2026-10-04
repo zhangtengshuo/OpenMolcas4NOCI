@@ -75,7 +75,7 @@ test:
 
 about:
   home: https://github.com/zhangtengshuo/OpenMolcas4NOCI
-  license: LGPL-2.1-only
+  license: LGPL-2.1-only AND BSD-3-Clause
   license_file:
     - LICENSE
     - wignernj-source/LICENSE

@@ -6,25 +6,37 @@ This release line is based on upstream OpenMolcas commit `4e52760a9bec07a7d253ee
 
 ## Conda installation
 
-The package is not published yet. A locally indexed candidate can be installed together with its conda-forge runtime dependencies as follows:
+The Linux x86-64 package is distributed as a checksummed asset of the [v26.06.1 GitHub Release](https://github.com/zhangtengshuo/OpenMolcas4NOCI/releases/tag/v26.06.1).
+
+Download the package and checksums from that release, verify the checksum, and install the local package together with its conda-forge dependencies:
 
 ```bash
-conda create -n openmolcas4noci --override-channels -c ./local-channel -c conda-forge openmolcas4noci=26.06.1
-conda activate openmolcas4noci
-pymolcas4noci --help
+curl -fLO https://github.com/zhangtengshuo/OpenMolcas4NOCI/releases/download/v26.06.1/openmolcas4noci-26.06.1-openmpi_hdf5_mkl_0.tar.bz2
+curl -fLO https://github.com/zhangtengshuo/OpenMolcas4NOCI/releases/download/v26.06.1/SHA256SUMS
+sha256sum --ignore-missing -c SHA256SUMS
+micromamba create -y -n openmolcas4noci --override-channels -c conda-forge ./openmolcas4noci-26.06.1-openmpi_hdf5_mkl_0.tar.bz2
+micromamba run -n openmolcas4noci pymolcas4noci --help
 ```
 
-After publication, replace the local channel path with the announced public channel.
+GitHub hosts the native Conda package; it is not a Conda channel and must not be passed as a channel URL.
 
-The package installs the dedicated runtime below the Conda prefix at `libexec/openmolcas4noci` and exposes `pymolcas4noci` as its public command, so it does not replace a separately installed `pymolcas` command.
+The package installs its runtime at `libexec/openmolcas4noci` and exposes `bin/pymolcas4noci`, preserving separately installed OpenMolcas commands.
 
-See `conda/README.md` for reproducible build instructions.
+This build uses OpenMPI, parallel HDF5, Global Arrays, MKL and Libxc on Linux x86-64; macOS, Windows and ARM packages are not provided by this release.
+
+The release also provides a complete runtime dependency lock, an explicit Conda specification and a machine-readable release manifest with source revision, package identity and SHA-256.
+
+See [conda/README.md](conda/README.md) for reproducible builds and separate program/dependency prefixes.
 
 ## NOCI.jl integration
 
-NOCI.jl uses the package to locate `pymolcas4noci`, `libmolcas.so`, MPI, HDF5, and the `CHH5` export format without requiring users to configure site-specific OpenMolcas paths.
+NOCI.jl can download the release package, verify its SHA-256 and record its version, build, source revision and installed path.
 
-Managed installation in NOCI.jl remains unavailable until this package is published and NOCI.jl points its CondaPkg channel configuration at the public channel.
+For shared dependencies, install the locked runtime dependencies into one Conda environment and install only the OpenMolcas4NOCI package into a separate versioned program prefix.
+
+NOCI.jl activates the dependency environment and sets `NOCI_OPENMOLCAS4NOCI` to the program's `bin/pymolcas4noci` and `NOCI_OPENMOLCAS_ROOT` to its `libexec/openmolcas4noci` directory.
+
+Compatible program upgrades can reuse that dependency environment after validation; a changed dependency lock requires a separate environment.
 
 ## Upstream OpenMolcas
 
@@ -35,18 +47,11 @@ OpenMolcas
 
 **Home page**: https://molcas.gitlab.io
 
-OpenMolcas is a quantum chemistry software package developed by scientists
-and intended to be used by scientists. It includes programs to apply many
-different electronic structure methods to chemical systems, but its key
-feature is the multiconfigurational approach, with methods like CASSCF and
-CASPT2.
+OpenMolcas is a quantum chemistry software package developed by scientists and intended to be used by scientists. It includes programs to apply many different electronic structure methods to chemical systems, but its key feature is the multiconfigurational approach, with methods like CASSCF and CASPT2.
 
 OpenMolcas is not a fork or reimplementation of
 [Molcas](http://www.molcas.org), it *is* a large part of the Molcas codebase
-that has been released as free and open-source software (FOSS) under the Lesser
-General Public License (LGPL) version 2.1. Some parts of Molcas remain under a different
-license by decision of their authors (or impossibility to reach them), and are
-therefore not included in OpenMolcas.
+that has been released as free and open-source software (FOSS) under the Lesser General Public License (LGPL) version 2.1. Some parts of Molcas remain under a different license by decision of their authors (or impossibility to reach them), and are therefore not included in OpenMolcas.
 
 **Latest references**:
 
@@ -65,11 +70,9 @@ therefore not included in OpenMolcas.
 Installation
 ------------
 
-For more detailed information, please refer to the [wiki
-pages](https://gitlab.com/Molcas/OpenMolcas/-/wikis/home).
+For more detailed information, please refer to the [wiki pages](https://gitlab.com/Molcas/OpenMolcas/-/wikis/home).
 
-OpenMolcas is configured with [CMake](https://cmake.org). A quick way to get it
-up and running is the following:
+OpenMolcas is configured with [CMake](https://cmake.org). A quick way to get it up and running is the following:
 
 1.  Clone the repository:
 
@@ -106,9 +109,7 @@ up and running is the following:
     ./pymolcas verify
     ```
 
-For running other calculations you should define the `MOLCAS` environment
-variable to point to the `build` directory. Run `./pymolcas --help` to see the
-available options of the script. In particular it is recommended to run:
+For running other calculations you should define the `MOLCAS` environment variable to point to the `build` directory. Run `./pymolcas --help` to see the available options of the script. In particular it is recommended to run:
 ```
 ./pymolcas -setup
 ```
@@ -121,28 +122,16 @@ The documentation can be found in the
 [`doc`](https://gitlab.com/Molcas/OpenMolcas/tree/master/doc) directory, you
 can read it in [HTML format](https://molcas.gitlab.io/OpenMolcas/sphinx/) or
 [PDF format](https://molcas.gitlab.io/OpenMolcas/Manual.pdf). Note that most
-of it precedes the creation of OpenMolcas and it is probably outdated in
-several points. It may also mention features not available in OpenMolcas.
+of it precedes the creation of OpenMolcas and it is probably outdated in several points. It may also mention features not available in OpenMolcas.
 
 Help
 ----
 
-OpenMolcas is a community-supported software and as such it doesn't have an
-official technical support. If you have any problems or questions, you can use
-the [Issues](/../issues) page or the [Molcas
-forum](https://molcasforum.univie.ac.at), and hopefully
-some other user or developer will be able to help you.
+OpenMolcas is a community-supported software and as such it doesn't have an official technical support. If you have any problems or questions, you can use the [Issues](/../issues) page or the [Molcas forum](https://molcasforum.univie.ac.at), and hopefully some other user or developer will be able to help you.
 
-If you need technical support, you can acquire a [Molcas
-license](http://www.molcas.org/order.html).
+If you need technical support, you can acquire a [Molcas license](http://www.molcas.org/order.html).
 
 Contributing
 ------------
 
-Since OpenMolcas is FOSS, you can download it, modify it and distribute it
-freely (according to the terms of the LGPL). If you would like your
-contributions to be included in the main repository, please contact one of the
-developers, write a message in the [forum](https://molcasforum.univie.ac.at) or
-submit a [merge request](https://docs.gitlab.com/user/project/merge_requests).
-Everyone is welcome to send patches, suggestions and bug reports, but please
-let us know if you would like to be a "developer" member of the `Molcas` group.
+Since OpenMolcas is FOSS, you can download it, modify it and distribute it freely (according to the terms of the LGPL). If you would like your contributions to be included in the main repository, please contact one of the developers, write a message in the [forum](https://molcasforum.univie.ac.at) or submit a [merge request](https://docs.gitlab.com/user/project/merge_requests). Everyone is welcome to send patches, suggestions and bug reports, but please let us know if you would like to be a "developer" member of the `Molcas` group.

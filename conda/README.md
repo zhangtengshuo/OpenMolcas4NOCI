@@ -15,3 +15,28 @@ The rendered recipe is retained as a separate release artifact instead of being 
 The package test runs real H2/STO-3G serial and two-rank MPI SEWARD calculations with `CHH5`, validates the portable manifest and uncompressed factors, checks fixed numerical references, and requires bitwise-identical serial/MPI factors.
 
 The recipe supports Conda's deliberately long build and test prefixes, rewrites runtime RPATH entries relative to the installed tree, normalizes recorded compiler paths, and rejects payloads that retain host, source, or build paths.
+
+## Separate program and runtime dependencies
+
+The release's `runtime-dependencies-linux-64.explicit.txt` contains only the runtime dependencies and pins every package by its conda-forge URL and SHA-256.
+
+`runtime-dependencies-linux-64.json` contains the corresponding package identities and SHA-256 values for installer bookkeeping.
+
+```bash
+micromamba create -y -p "$DEPENDENCY_PREFIX" -f runtime-dependencies-linux-64.explicit.txt
+micromamba create -y --offline --no-deps -p "$PROGRAM_PREFIX" ./openmolcas4noci-26.06.1-openmpi_hdf5_mkl_0.tar.bz2
+ln -s "$(realpath --relative-to="$PROGRAM_PREFIX" "$DEPENDENCY_PREFIX/lib")" "$PROGRAM_PREFIX/lib"
+micromamba run -p "$DEPENDENCY_PREFIX" "$PROGRAM_PREFIX/bin/pymolcas4noci" --help
+```
+
+Choose new prefixes owned by the installer and refuse an existing program `lib` directory instead of replacing it.
+
+The relative `lib` link satisfies the package's relative ELF RPATH and shares dependency libraries without copying them into every program version.
+
+Run calculations inside the dependency environment so the launcher can discover its Python and MPI commands.
+
+The program and dependency directories can be relocated together while preserving their relative layout; Conda dependency environments themselves must be installed at their final prefixes.
+
+Program versions may share an accepted dependency lock only after their serial, MPI and NOCI.jl integration tests pass against that lock.
+
+Do not install the program package into the dependency-only environment or upgrade dependencies implicitly when switching program versions.

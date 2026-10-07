@@ -15,6 +15,19 @@ EXPECTED_GRAM = np.array(
 )
 
 
+# Independent RICD reference: v26.06.1 temporary SEWARD vectors, H2/STO-3G,
+# 0.74 angstrom, C1, GATEWAY RICD/CDThreshold=1e-8, no SEWARD Cholesky.
+# The atomic auxiliary basis does not reproduce the conventional-CD
+# off-diagonal-pair self integral exactly; do not reuse EXPECTED_GRAM.
+EXPECTED_RICD_GRAM = np.array(
+    [
+        [0.7746059442114877, 0.4445911242945691, 0.5699948829139262],
+        [0.4445911242945691, 0.2940073571486398, 0.4445911242945691],
+        [0.5699948829139262, 0.4445911242945691, 0.7746059442114873],
+    ]
+)
+
+
 def text(value: object) -> str:
     if isinstance(value, bytes):
         return value.decode().rstrip("\x00")
@@ -65,7 +78,7 @@ def load_export(directory: pathlib.Path, expected_ranks: int, origin: str) -> tu
     assert assigned.all()
     np.testing.assert_allclose(overlap, [[1.0, 0.6598731211014597], [0.6598731211014597, 1.0]], rtol=0.0, atol=1.0e-9)
     np.testing.assert_allclose(core, [[-1.1209594575132389, -0.9593757705058865], [-0.9593757705058865, -1.1209594575132389]], rtol=0.0, atol=1.0e-8)
-    np.testing.assert_allclose(factors @ factors.T, EXPECTED_GRAM, rtol=0.0, atol=2.0e-9)
+    np.testing.assert_allclose(factors @ factors.T, EXPECTED_RICD_GRAM if origin == "ricd" else EXPECTED_GRAM, rtol=0.0, atol=2.0e-9)
     return factors, overlap
 
 

@@ -50,3 +50,17 @@ done
 python "$test_data_root/validate_chh5.py" \
     "$test_root/h2_ricd_serial.NOCI_SEWARD_H5" \
     "$test_root/h2_ricd_mpi.NOCI_SEWARD_H5" ricd
+
+# A cross-module RI-to-CD override must fail explicitly for CHH5.
+sed '/^CHH5$/i\Cholesky' "$test_data_root/h2_ricd_chh5.input" > "$test_root/h2_conflict.input"
+mkdir -p "$test_root/conflict-work"
+set +e
+(
+    cd "$test_root"
+    MOLCAS_NPROCS=1 MOLCAS_OUTPUT="$test_root" MOLCAS_WORKDIR="$test_root/conflict-work" OMP_NUM_THREADS=1 \
+        pymolcas4noci h2_conflict.input > h2_conflict.out
+)
+status=$?
+set -e
+[[ $status == 112 ]]
+grep -F 'SEWARD Cholesky overrides GATEWAY RI/RICD' "$test_root/h2_conflict.out"

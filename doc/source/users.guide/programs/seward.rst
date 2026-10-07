@@ -298,14 +298,17 @@ General keywords
               </KEYWORD>
 
 :kword:`CHH5`
-  Export C1 AO-basis Cholesky factors, explicit reduced-pair indices, one-electron operators, molecular metadata, and MPI shard metadata in a portable HDF5 directory for NOCI calculations.
-  This keyword requires :kword:`CHOLesky`, an HDF5-enabled build, and C1 symmetry; RI/DF input is rejected by format version 1.
+  Export C1 AO-basis metric-whitened ERI factors, explicit reduced-pair indices, one-electron operators, molecular metadata, and MPI shard metadata in a portable HDF5 directory for NOCI calculations.
+  This keyword requires an HDF5-enabled build and C1 symmetry, with either conventional :kword:`CHOLesky` in SEWARD or :kword:`RICD` in GATEWAY.
+  For RICD, do not add SEWARD Cholesky keywords: the exporter consumes RI vectors with the auxiliary metric already absorbed.
+  Format 1.1 records the factor origin and distinguishes molecular ERI CD thresholds from RICD atomic auxiliary-basis CD thresholds; other RI modes are currently rejected.
+  Combining GATEWAY RI/RICD and SEWARD Cholesky with CHH5 is rejected to prevent a silent method override.
   Every MPI rank writes one uncompressed factor shard, while rank zero writes :file:`manifest.h5`; the directory is published atomically only after global auxiliary-index coverage has been validated.
 
   .. xmldoc:: <KEYWORD MODULE="SEWARD" NAME="CHH5" APPEAR="Portable NOCI HDF5 export" KIND="SINGLE" LEVEL="ADVANCED">
               %%Keyword: CHH5 <advanced>
               <HELP>
-              Export portable C1 AO Cholesky and one-electron data for NOCI calculations.
+              Export portable C1 AO CD/RICD ERI factors and one-electron data for NOCI calculations.
               </HELP>
               </KEYWORD>
 

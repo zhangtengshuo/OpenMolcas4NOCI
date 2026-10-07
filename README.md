@@ -6,17 +6,17 @@ This release line is based on upstream OpenMolcas commit `4e52760a9bec07a7d253ee
 
 ## Conda installation
 
-The Linux x86-64 package is distributed as a checksummed asset of the [v26.06.1 GitHub Release](https://github.com/zhangtengshuo/OpenMolcas4NOCI/releases/tag/v26.06.1).
+The v26.06.2 Linux x86-64 package is a release candidate intended for the NOCI.jl automatic installer; publication is pending validation and review.
 
 Download the package, the complete runtime dependency specification and the checksums from that release, verify the checksums, then install the dependencies before the local program package:
 
 ```bash
-curl -fLO https://github.com/zhangtengshuo/OpenMolcas4NOCI/releases/download/v26.06.1/openmolcas4noci-26.06.1-openmpi_hdf5_mkl_0.tar.bz2
-curl -fLO https://github.com/zhangtengshuo/OpenMolcas4NOCI/releases/download/v26.06.1/runtime-dependencies-linux-64.explicit.txt
-curl -fLO https://github.com/zhangtengshuo/OpenMolcas4NOCI/releases/download/v26.06.1/SHA256SUMS
+curl -fLO https://github.com/zhangtengshuo/OpenMolcas4NOCI/releases/download/v26.06.2/openmolcas4noci-26.06.2-openmpi_hdf5_mkl_0.tar.bz2
+curl -fLO https://github.com/zhangtengshuo/OpenMolcas4NOCI/releases/download/v26.06.2/runtime-dependencies-linux-64.explicit.txt
+curl -fLO https://github.com/zhangtengshuo/OpenMolcas4NOCI/releases/download/v26.06.2/SHA256SUMS
 sha256sum --ignore-missing -c SHA256SUMS
 micromamba create -y -n openmolcas4noci -f runtime-dependencies-linux-64.explicit.txt
-micromamba install -y --offline --no-deps -n openmolcas4noci ./openmolcas4noci-26.06.1-openmpi_hdf5_mkl_0.tar.bz2
+micromamba install -y --offline --no-deps -n openmolcas4noci ./openmolcas4noci-26.06.2-openmpi_hdf5_mkl_0.tar.bz2
 micromamba run -n openmolcas4noci pymolcas4noci --help
 ```
 
@@ -132,3 +132,25 @@ Contributing
 ------------
 
 Since OpenMolcas is FOSS, you can download it, modify it and distribute it freely (according to the terms of the LGPL). If you would like your contributions to be included in the main repository, please contact one of the developers, write a message in the [forum](https://molcasforum.univie.ac.at) or submit a [merge request](https://docs.gitlab.com/user/project/merge_requests). Everyone is welcome to send patches, suggestions and bug reports, but please let us know if you would like to be a "developer" member of the `Molcas` group.
+
+## Portable ERI factors (CHH5)
+
+CHH5 exports C1 AO ERI factors and one-electron operators independently of temporary SEWARD files.
+Choose one factor-generation method: conventional molecular CD in SEWARD, or RICD in GATEWAY with only CHH5 in SEWARD.
+Combining GATEWAY RI/RICD with SEWARD Cholesky and CHH5 is rejected because the latter overrides the RI calculation.
+
+```text
+&GATEWAY
+... coordinates, basis, and Group=NoSym ...
+RICD
+CDThreshold
+1.0d-4
+&SEWARD
+CHH5
+```
+
+RICD factors have the auxiliary Coulomb metric absorbed and obey the same Gram convention as CD factors: `(pq|rs)=sum_L L[pq,L]*L[rs,L]`.
+The RICD CDThreshold controls atomic auxiliary-basis construction; it is not a molecular ERI CD error tolerance.
+Format 1.1 retains the version-1 `cholesky` storage-group name for both methods and adds explicit `provenance/factor_origin`, `ri_type`, `auxiliary_basis_kind`, `threshold_kind`, and `system/factor_generation_threshold` metadata.
+`system/cholesky_threshold` is present only for conventional CD; RICD consumers must read its atomic-basis threshold and origin instead.
+Other RI modes and non-C1 symmetry are outside this export contract.

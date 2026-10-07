@@ -28,7 +28,7 @@ The release's `runtime-dependencies-linux-64.explicit.txt` contains only the run
 
 ```bash
 micromamba create -y -p "$DEPENDENCY_PREFIX" -f runtime-dependencies-linux-64.explicit.txt
-micromamba create -y --offline --no-deps -p "$PROGRAM_PREFIX" ./openmolcas4noci-26.06.1-openmpi_hdf5_mkl_0.tar.bz2
+micromamba create -y --offline --no-deps -p "$PROGRAM_PREFIX" ./openmolcas4noci-26.06.2-openmpi_hdf5_mkl_0.tar.bz2
 ln -s "$(realpath --relative-to="$PROGRAM_PREFIX" "$DEPENDENCY_PREFIX/lib")" "$PROGRAM_PREFIX/lib"
 micromamba run -p "$DEPENDENCY_PREFIX" "$PROGRAM_PREFIX/bin/pymolcas4noci" --help
 ```

@@ -1,0 +1,16 @@
+&GATEWAY
+Coord
+2
+H2
+H 0.0 0.0 0.0
+H 0.0 0.0 0.74
+Basis
+STO-3G
+Group
+NoSym
+RICD
+CDThreshold
+1.0d-8
+
+&SEWARD
+CHH5

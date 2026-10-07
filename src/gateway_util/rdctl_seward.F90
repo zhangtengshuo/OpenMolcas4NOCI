@@ -131,6 +131,7 @@ character(len=*), parameter :: KeyW(188) = ['END ','EMBE','SYMM','FILE','VECT','
                                             'NOAL','WEIG','ALIG','TINK','ORIG','HYPE','ZCON','SCAL','DOAN','GEOE','OLDZ','OPTH', &
                                             'NOON','GEO ','MXTC','FRGM','TRAN','ROT ','ZONL','BASL','NUME','VART','VARR','SHAK', &
                                             'PAMF','GROM','LINK','EMFR','NOCD','FNMC','ISOT','EFP ']
+logical(kind=iwp) :: gateway_ri
 integer(kind=iwp), external :: iCFrst, iChAtm, IsFreeUnit
 real(kind=wp), external :: NucExp, rMass, rMassx
 character(len=180), external :: Get_Ln
@@ -138,6 +139,7 @@ character(len=180), external :: Get_Ln
 !                                                                      *
 !***********************************************************************
 !                                                                      *
+gateway_ri = Do_RI .and. (Run_Mode == S_Mode)
 iRout = 3
 iPrint = nPrint(iRout)
 !                                                                      *
@@ -3321,12 +3323,16 @@ if (Chol) then
 end if
 
 if (Seward_HDF5_Export_Enabled) then
-  if (.not. Chol) then
-    call WarningMessage(2,'CHH5 requires an active conventional Cholesky decomposition.')
+  if (gateway_ri .and. Chol) then
+    call WarningMessage(2,'CHH5: SEWARD Cholesky overrides GATEWAY RI/RICD; select one factor-generation method.')
     call Quit_OnUserError()
   end if
-  if (Do_RI) then
-    call WarningMessage(2,'CHH5 does not support RI/DF input in format version 1.')
+  if (.not. (Chol .or. Do_RI)) then
+    call WarningMessage(2,'CHH5 requires conventional Cholesky or GATEWAY RICD.')
+    call Quit_OnUserError()
+  end if
+  if (Do_RI .and. (iRI_Type /= 4)) then
+    call WarningMessage(2,'CHH5 currently supports RICD whitened RI factors only; other RI modes are not supported.')
     call Quit_OnUserError()
   end if
   if (nIrrep /= 1) then

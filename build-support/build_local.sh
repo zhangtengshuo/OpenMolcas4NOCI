@@ -3,7 +3,7 @@ set -euo pipefail
 
 source_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 workspace_root=${OPENMOLCAS4NOCI_WORKSPACE_ROOT:-$(dirname "$source_root")}
-version_root=${OPENMOLCAS4NOCI_VERSION_ROOT:-$workspace_root/build/v26.06.1}
+version_root=${OPENMOLCAS4NOCI_VERSION_ROOT:-$workspace_root/build/v26.06.2}
 environment_prefix=${OPENMOLCAS4NOCI_ENV_PREFIX:-$version_root/env}
 build_root=${OPENMOLCAS4NOCI_BUILD_ROOT:-$version_root/cmake}
 install_root=${OPENMOLCAS4NOCI_INSTALL_ROOT:-$version_root/install}

@@ -1,4 +1,4 @@
-{% set version = "26.06.1" %}
+{% set version = "26.06.2" %}
 
 package:
   name: openmolcas4noci
@@ -65,6 +65,7 @@ requirements:
 test:
   source_files:
     - conda/recipe/tests/h2_chh5.input
+    - conda/recipe/tests/h2_ricd_chh5.input
     - conda/recipe/tests/validate_chh5.py
   requires:
     - h5py
@@ -81,11 +82,11 @@ about:
     - LICENSE
     - wignernj-source/LICENSE
   summary: Controlled MPI-enabled OpenMolcas runtime for NOCI.jl
-  description: OpenMolcas 26.06 with the versioned OpenMolcas4NOCI revision 1 fixes and portable SEWARD HDF5 export required by NOCI.jl.
+  description: OpenMolcas 26.06 with the versioned OpenMolcas4NOCI revision 2 fixes and portable SEWARD HDF5 export required by NOCI.jl.
   dev_url: https://github.com/zhangtengshuo/OpenMolcas4NOCI
 
 extra:
   upstream_commit: 4e52760a9bec07a7d253ee2fc5ac29fc5203bf27
-  noci_revision: 1
+  noci_revision: 2
   recipe-maintainers:
     - zhangtengshuo

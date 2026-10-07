@@ -34,3 +34,19 @@ mkdir -p "$test_root/serial-work" "$test_root/mpi-work"
 python "$test_data_root/validate_chh5.py" \
     "$test_root/h2_serial.NOCI_SEWARD_H5" \
     "$test_root/h2_mpi.NOCI_SEWARD_H5"
+
+for mode in serial mpi; do
+    cp "$test_data_root/h2_ricd_chh5.input" "$test_root/h2_ricd_${mode}.input"
+    mkdir -p "$test_root/ricd-${mode}-work"
+    ranks=1
+    [[ $mode != mpi ]] || ranks=2
+    (
+        cd "$test_root"
+        export OMPI_ALLOW_RUN_AS_ROOT=1 OMPI_ALLOW_RUN_AS_ROOT_CONFIRM=1
+        MOLCAS_NPROCS="$ranks" MOLCAS_OUTPUT="$test_root" MOLCAS_WORKDIR="$test_root/ricd-${mode}-work" OMP_NUM_THREADS=1 \
+            pymolcas4noci "h2_ricd_${mode}.input" > "h2_ricd_${mode}.out"
+    )
+done
+python "$test_data_root/validate_chh5.py" \
+    "$test_root/h2_ricd_serial.NOCI_SEWARD_H5" \
+    "$test_root/h2_ricd_mpi.NOCI_SEWARD_H5" ricd

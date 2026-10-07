@@ -1,4 +1,4 @@
-name: openmolcas4noci-v26.06.1
+name: openmolcas4noci-v26.06.2
 channels:
   - conda-forge
 dependencies:

@@ -19,13 +19,14 @@ use mh5, only: mh5_close_dset, mh5_close_file, mh5_close_group, mh5_create_dset_
 use Molcas, only: LenIn
 use OneDat, only: sNoNuc, sNoOri
 use Para_Info, only: King, MyRank, nProcs
+use RICD_Info, only: Do_RI, Do_acCD_Basis, iRI_Type, Thrshld_CD
 use Definitions, only: wp, iwp, u6
 
 implicit none
 private
 
 integer(kind=iwp), parameter :: FORMAT_MAJOR = 1_iwp
-integer(kind=iwp), parameter :: FORMAT_MINOR = 0_iwp
+integer(kind=iwp), parameter :: FORMAT_MINOR = 1_iwp
 integer(kind=iwp), parameter :: MAX_PATH = 4096_iwp
 integer(kind=c_int64_t), parameter :: TARGET_BATCH_BYTES = 256_c_int64_t*1024_c_int64_t*1024_c_int64_t
 
@@ -63,7 +64,7 @@ subroutine Seward_Export_Portable_HDF5()
   call GASync()
 
   call Get_iArray('NumCho',global_numcho,1)
-  if (global_numcho(1) < 1) call export_error('The RunFile contains no Cholesky vectors.')
+  if (global_numcho(1) < 1) call export_error('The RunFile contains no ERI factors.')
   call Get_iArray('nBas',n_bas,1)
   n_ao = n_bas(1)
 
@@ -73,7 +74,7 @@ subroutine Seward_Export_Portable_HDF5()
   n_reduced = mmBstRT
   local_numcho = NumCho(1)
   if (n_reduced < 1) call export_error('The reduced AO-pair dimension is zero.')
-  if (local_numcho < 1) call export_error('Format version 1 requires at least one local Cholesky vector per MPI rank.')
+  if (local_numcho < 1) call export_error('Format version 1 requires at least one local ERI factor per MPI rank.')
 
   allocate(reduced_pairs(2,n_reduced))
   call Cho_RstOF(reduced_pairs,2,n_reduced,1)
@@ -86,12 +87,12 @@ subroutine Seward_Export_Portable_HDF5()
   do i=1,local_numcho
     global_ids(i) = int(InfVec(i,5,1),c_int64_t)
     if ((global_ids(i) < 1_c_int64_t) .or. (global_ids(i) > int(global_numcho(1),c_int64_t))) then
-      call export_error('A local Cholesky vector has an invalid global auxiliary index.')
+      call export_error('A local ERI factor has an invalid global auxiliary index.')
     end if
     coverage(int(global_ids(i),iwp)) = coverage(int(global_ids(i),iwp))+1
   end do
   call GAIGOP(coverage,global_numcho(1),'+')
-  if (any(coverage /= 1)) call export_error('MPI Cholesky shards do not cover every global auxiliary index exactly once.')
+  if (any(coverage /= 1)) call export_error('MPI ERI factor shards do not cover every global auxiliary index exactly once.')
   deallocate(coverage)
 
   allocate(local_counts(nProcs),local_bounds(2,nProcs))
@@ -102,7 +103,7 @@ subroutine Seward_Export_Portable_HDF5()
   local_bounds(2,MyRank+1) = int(maxval(global_ids),iwp)
   call GAIGOP(local_counts,nProcs,'+')
   call GAIGOP(local_bounds,2*nProcs,'+')
-  if (sum(local_counts) /= global_numcho(1)) call export_error('MPI shard counts do not sum to the global Cholesky count.')
+  if (sum(local_counts) /= global_numcho(1)) call export_error('MPI shard counts do not sum to the global ERI factor count.')
 
   write(shard_name,'("rank_",I4.4,".h5")') MyRank
   shard_temp = trim(partial_dir)//'/'//trim(shard_name)//'.partial'
@@ -210,9 +211,14 @@ subroutine write_manifest(path,project,n_ao,n_reduced,n_auxiliary,reduced_pairs,
   call write_i64_scalar(system_group,'n_auxiliary_global',int(n_auxiliary,c_int64_t))
   call write_i64_scalar(system_group,'n_mpi_ranks',int(size(local_counts),c_int64_t))
   call Get_dScalar('PotNuc',potnuc)
-  call Get_dScalar('Cholesky Threshold',threshold)
   call write_real_scalar(system_group,'nuclear_repulsion',potnuc,'hartree')
-  call write_real_scalar(system_group,'cholesky_threshold',threshold,'hartree')
+  if (Do_RI) then
+    threshold = Thrshld_CD
+  else
+    call Get_dScalar('Cholesky Threshold',threshold)
+    call write_real_scalar(system_group,'cholesky_threshold',threshold,'hartree')
+  end if
+  call write_real_scalar(system_group,'factor_generation_threshold',threshold,'hartree')
 
   allocate(pairs64(2,n_reduced))
   pairs64 = int(reduced_pairs,c_int64_t)
@@ -286,8 +292,24 @@ subroutine write_manifest(path,project,n_ao,n_reduced,n_auxiliary,reduced_pairs,
   deallocate(shard_names,counts64,bounds64)
 
   call write_string_scalar(provenance_group,'project',trim(project))
-  call write_string_scalar(provenance_group,'producer','OpenMolcas4NOCI-v26.06.1 SEWARD CHH5')
-  call write_string_scalar(provenance_group,'source_kind','SEWARD AO Cholesky decomposition')
+  call write_string_scalar(provenance_group,'producer','OpenMolcas4NOCI-v26.06.2 SEWARD CHH5')
+  if (Do_RI) then
+    call write_string_scalar(provenance_group,'factor_origin','ricd')
+    call write_string_scalar(provenance_group,'source_kind','SEWARD AO metric-whitened RICD factors')
+    call write_i64_scalar(provenance_group,'ri_type',int(iRI_Type,c_int64_t))
+    if (Do_acCD_Basis) then
+      call write_string_scalar(provenance_group,'auxiliary_basis_kind','accd')
+    else
+      call write_string_scalar(provenance_group,'auxiliary_basis_kind','acd')
+    end if
+    call write_string_scalar(provenance_group,'threshold_kind','atomic_auxiliary_basis_cd')
+  else
+    call write_string_scalar(provenance_group,'factor_origin','conventional_cd')
+    call write_string_scalar(provenance_group,'source_kind','SEWARD AO Cholesky decomposition')
+    call write_i64_scalar(provenance_group,'ri_type',0_c_int64_t)
+    call write_string_scalar(provenance_group,'auxiliary_basis_kind','none')
+    call write_string_scalar(provenance_group,'threshold_kind','molecular_eri_cd')
+  end if
 
   call mh5_close_group(provenance_group)
   call mh5_close_group(shards_group)

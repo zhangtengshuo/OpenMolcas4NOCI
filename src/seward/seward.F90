@@ -362,6 +362,9 @@ if (.not. Test) then
         end if
 
         call Drv2El_3Center_RI(Zero)
+#ifdef _HDF5_
+        if (Seward_HDF5_Export_Enabled) call Seward_Export_Portable_HDF5()
+#endif
 
         call Get_iArray('NumCho',nChoV,nIrrep)
         if (nPrint(iRout) >= 6) then

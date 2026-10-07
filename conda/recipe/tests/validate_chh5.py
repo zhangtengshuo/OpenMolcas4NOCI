@@ -21,7 +21,7 @@ def text(value: object) -> str:
     return str(value).rstrip("\x00")
 
 
-def load_export(directory: pathlib.Path, expected_ranks: int) -> tuple[np.ndarray, np.ndarray]:
+def load_export(directory: pathlib.Path, expected_ranks: int, origin: str) -> tuple[np.ndarray, np.ndarray]:
     manifest_path = directory / "manifest.h5"
     assert manifest_path.is_file()
     with h5py.File(manifest_path, "r") as manifest:
@@ -29,6 +29,17 @@ def load_export(directory: pathlib.Path, expected_ranks: int) -> tuple[np.ndarra
         assert int(manifest.attrs["FORMAT_MAJOR"]) == 1
         assert int(manifest["system/n_symmetry"][()]) == 1
         assert int(manifest["system/n_mpi_ranks"][()]) == expected_ranks
+        assert int(manifest.attrs["FORMAT_MINOR"]) == 1
+        assert text(manifest["provenance/factor_origin"][()]) == origin
+        assert float(manifest["system/factor_generation_threshold"][()]) > 0.0
+        if origin == "ricd":
+            assert int(manifest["provenance/ri_type"][()]) == 4
+            assert text(manifest["provenance/auxiliary_basis_kind"][()]) in ("acd", "accd")
+            assert text(manifest["provenance/threshold_kind"][()]) == "atomic_auxiliary_basis_cd"
+            assert "system/cholesky_threshold" not in manifest
+        else:
+            assert text(manifest["provenance/threshold_kind"][()]) == "molecular_eri_cd"
+            assert int(manifest["provenance/ri_type"][()]) == 0
         n_reduced = int(manifest["system/n_reduced_pairs"][()])
         n_auxiliary = int(manifest["system/n_auxiliary_global"][()])
         overlap = manifest["one_electron/overlap"][...]
@@ -59,9 +70,10 @@ def load_export(directory: pathlib.Path, expected_ranks: int) -> tuple[np.ndarra
 
 
 def main() -> None:
-    assert len(sys.argv) == 3
-    serial, serial_overlap = load_export(pathlib.Path(sys.argv[1]), 1)
-    parallel, parallel_overlap = load_export(pathlib.Path(sys.argv[2]), 2)
+    assert len(sys.argv) in (3, 4)
+    origin = sys.argv[3] if len(sys.argv) == 4 else "conventional_cd"
+    serial, serial_overlap = load_export(pathlib.Path(sys.argv[1]), 1, origin)
+    parallel, parallel_overlap = load_export(pathlib.Path(sys.argv[2]), 2, origin)
     np.testing.assert_array_equal(parallel, serial)
     np.testing.assert_array_equal(parallel_overlap, serial_overlap)
 

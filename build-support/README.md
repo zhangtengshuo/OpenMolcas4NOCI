@@ -1,8 +1,8 @@
-# OpenMolcas4NOCI v26.06.1 build support
+# OpenMolcas4NOCI v26.06.2 build support
 
 ## Source baseline
 
-This development line is based on upstream OpenMolcas commit `4e52760a9bec07a7d253ee2fc5ac29fc5203bf27` and is maintained as the derived release `OpenMolcas4NOCI-v26.06.1`.
+This development line is based on upstream OpenMolcas commit `4e52760a9bec07a7d253ee2fc5ac29fc5203bf27` and is maintained as the derived release `OpenMolcas4NOCI-v26.06.2`.
 
 The derived source includes the SEWARD/RI direct-accumulation performance correction, the MOTRA MPI frozen-core one-electron correction, the EXPBAS `GUGAORDER` option, and the portable SEWARD HDF5 export described below.
 
@@ -15,7 +15,7 @@ Run the following commands from a normal shell after installing Micromamba:
 ./build-support/build_local.sh
 ```
 
-The scripts place the environment, build tree, and installation below the versioned outer-workspace directory `build/v26.06.1/`.
+The scripts place the environment, build tree, and installation below the versioned outer-workspace directory `build/v26.06.2/`.
 
 Set `MAMBA_ROOT_PREFIX` when reusing an existing Micromamba package cache; otherwise `create_environment.sh` uses `build/shared/micromamba-root/` below the outer workspace.
 
